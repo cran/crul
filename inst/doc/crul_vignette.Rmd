@@ -24,7 +24,7 @@ Dev version
 
 
 ```r
-devtools::install_github(c("ropenscilabs/crul"))
+devtools::install_github("ropensci/crul")
 ```
 
 
@@ -55,8 +55,8 @@ library("crul")
 #>     a: hello world
 ```
 
-Makes a R6 class, that has all the bits and bobs you'd expect for doing HTTP 
-requests. When it prints, it gives any defaults you've set. As you update 
+Makes a R6 class, that has all the bits and bobs you'd expect for doing HTTP
+requests. When it prints, it gives any defaults you've set. As you update
 the object you can see what's been set
 
 
@@ -75,11 +75,11 @@ x$headers
 
 ## do some http
 
-The client object created above has http methods that you can call, 
-and pass paths to, as well as query parameters, body values, and any other 
+The client object created above has http methods that you can call,
+and pass paths to, as well as query parameters, body values, and any other
 curl options.
 
-Here, we'll do a __GET__ request on the route `/get` on our base url 
+Here, we'll do a __GET__ request on the route `/get` on our base url
 `https://httpbin.org` (the full url is then `https://httpbin.org/get`)
 
 
@@ -87,8 +87,8 @@ Here, we'll do a __GET__ request on the route `/get` on our base url
 res <- x$get("get")
 ```
 
-The response from a http request is another R6 class `HttpResponse`, which 
-has slots for the outputs of the request, and some functions to deal with 
+The response from a http request is another R6 class `HttpResponse`, which
+has slots for the outputs of the request, and some functions to deal with
 the response:
 
 Status code
@@ -111,12 +111,12 @@ res$content
 #>  [93] 6e 63 6f 64 69 6e 67 22 3a 20 22 67 7a 69 70 2c 20 64 65 66 6c 61 74
 #> [116] 65 22 2c 20 0a 20 20 20 20 22 48 6f 73 74 22 3a 20 22 68 74 74 70 62
 #> [139] 69 6e 2e 6f 72 67 22 2c 20 0a 20 20 20 20 22 55 73 65 72 2d 41 67 65
-#> [162] 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 34 39 2e 31 20 72 2d
-#> [185] 63 75 72 6c 2f 32 2e 32 20 63 72 75 6c 2f 30 2e 30 2e 31 2e 39 30 30
-#> [208] 30 22 0a 20 20 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 31
-#> [231] 35 37 2e 31 33 30 2e 31 37 39 2e 38 36 22 2c 20 0a 20 20 22 75 72 6c
-#> [254] 22 3a 20 22 68 74 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67
-#> [277] 2f 67 65 74 22 0a 7d 0a
+#> [162] 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 35 31 2e 30 20 72 2d
+#> [185] 63 75 72 6c 2f 32 2e 33 20 63 72 75 6c 2f 30 2e 31 2e 36 22 0a 20 20
+#> [208] 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 37 31 2e 36 33 2e
+#> [231] 32 32 33 2e 31 31 33 22 2c 20 0a 20 20 22 75 72 6c 22 3a 20 22 68 74
+#> [254] 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67 2f 67 65 74 22 0a
+#> [277] 7d 0a
 ```
 
 HTTP method
@@ -140,9 +140,15 @@ Response headers
 
 
 ```r
-res$request_headers
-#> $a
-#> [1] "hello world"
+res$response_headers
+#> [1] "HTTP/1.1 200 OK"                       
+#> [2] "Server: nginx"                         
+#> [3] "Date: Sat, 17 Dec 2016 01:17:22 GMT"   
+#> [4] "Content-Type: application/json"        
+#> [5] "Content-Length: 278"                   
+#> [6] "Connection: keep-alive"                
+#> [7] "Access-Control-Allow-Origin: *"        
+#> [8] "Access-Control-Allow-Credentials: true"
 ```
 
 And you can parse the content with a provided function:
@@ -150,7 +156,7 @@ And you can parse the content with a provided function:
 
 ```r
 res$parse()
-#> [1] "{\n  \"args\": {}, \n  \"headers\": {\n    \"A\": \"hello world\", \n    \"Accept\": \"*/*\", \n    \"Accept-Encoding\": \"gzip, deflate\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"libcurl/7.49.1 r-curl/2.2 crul/0.0.1.9000\"\n  }, \n  \"origin\": \"157.130.179.86\", \n  \"url\": \"https://httpbin.org/get\"\n}\n"
+#> [1] "{\n  \"args\": {}, \n  \"headers\": {\n    \"A\": \"hello world\", \n    \"Accept\": \"*/*\", \n    \"Accept-Encoding\": \"gzip, deflate\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"libcurl/7.51.0 r-curl/2.3 crul/0.1.6\"\n  }, \n  \"origin\": \"71.63.223.113\", \n  \"url\": \"https://httpbin.org/get\"\n}\n"
 jsonlite::fromJSON(res$parse())
 #> $args
 #> named list()
@@ -169,12 +175,88 @@ jsonlite::fromJSON(res$parse())
 #> [1] "httpbin.org"
 #> 
 #> $headers$`User-Agent`
-#> [1] "libcurl/7.49.1 r-curl/2.2 crul/0.0.1.9000"
+#> [1] "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"
 #> 
 #> 
 #> $origin
-#> [1] "157.130.179.86"
+#> [1] "71.63.223.113"
 #> 
 #> $url
 #> [1] "https://httpbin.org/get"
+```
+
+With the `HttpClient` object, which holds any configuration stuff
+we set, we can make other HTTP verb requests. For example, a `HEAD`
+request:
+
+
+```r
+x$post(
+  path = "post", 
+  body = list(hello = "world")
+)
+#> <crul response> 
+#>   url: https://httpbin.org/post
+#>   request_headers: 
+#>     a: hello world
+#>   response_headers: 
+#>     HTTP/1.1 200 OK
+#>     Server: nginx
+#>     Date: Sat, 17 Dec 2016 01:17:22 GMT
+#>     Content-Type: application/json
+#>     Content-Length: 491
+#>     Connection: keep-alive
+#>     Access-Control-Allow-Origin: *
+#>     Access-Control-Allow-Credentials: true
+#>   status: 200
+```
+
+
+## write to disk
+
+
+```r
+x <- HttpClient$new(url = "https://httpbin.org")
+f <- tempfile()
+res <- x$get(disk = f)
+# when using write to disk, content is a path
+res$content 
+#> [1] "/var/folders/gs/4khph0xs0436gmd2gdnwsg080000gn/T//RtmpzMxcbq/file1446b173dd896"
+```
+
+Read lines
+
+
+```r
+readLines(res$content, n = 10)
+#>  [1] "<!DOCTYPE html>"                                                                           
+#>  [2] "<html>"                                                                                    
+#>  [3] "<head>"                                                                                    
+#>  [4] "  <meta http-equiv='content-type' value='text/html;charset=utf8'>"                         
+#>  [5] "  <meta name='generator' value='Ronn/v0.7.3 (http://github.com/rtomayko/ronn/tree/0.7.3)'>"
+#>  [6] "  <title>httpbin(1): HTTP Client Testing Service</title>"                                  
+#>  [7] "  <style type='text/css' media='all'>"                                                     
+#>  [8] "  /* style: man */"                                                                        
+#>  [9] "  body#manpage {margin:0}"                                                                 
+#> [10] "  .mp {max-width:100ex;padding:0 9ex 1ex 4ex}"
+```
+
+## stream data
+
+
+```r
+(x <- HttpClient$new(url = "https://httpbin.org"))
+#> <crul connection> 
+#>   url: https://httpbin.org
+#>   options: 
+#>   headers:
+res <- x$get('stream/5', stream = function(x) cat(rawToChar(x)))
+#> {"url": "https://httpbin.org/stream/5", "headers": {"Host": "httpbin.org", "Accept-Encoding": "gzip, deflate", "Accept": "*/*", "User-Agent": "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"}, "args": {}, "id": 0, "origin": "71.63.223.113"}
+#> {"url": "https://httpbin.org/stream/5", "headers": {"Host": "httpbin.org", "Accept-Encoding": "gzip, deflate", "Accept": "*/*", "User-Agent": "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"}, "args": {}, "id": 1, "origin": "71.63.223.113"}
+#> {"url": "https://httpbin.org/stream/5", "headers": {"Host": "httpbin.org", "Accept-Encoding": "gzip, deflate", "Accept": "*/*", "User-Agent": "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"}, "args": {}, "id": 2, "origin": "71.63.223.113"}
+#> {"url": "https://httpbin.org/stream/5", "headers": {"Host": "httpbin.org", "Accept-Encoding": "gzip, deflate", "Accept": "*/*", "User-Agent": "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"}, "args": {}, "id": 3, "origin": "71.63.223.113"}
+#> {"url": "https://httpbin.org/stream/5", "headers": {"Host": "httpbin.org", "Accept-Encoding": "gzip, deflate", "Accept": "*/*", "User-Agent": "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"}, "args": {}, "id": 4, "origin": "71.63.223.113"}
+# when streaming, content is NULL
+res$content 
+#> NULL
 ```

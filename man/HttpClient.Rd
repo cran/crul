@@ -17,28 +17,40 @@ HTTP client
 \details{
 \strong{Methods}
   \describe{
-    \item{\code{get(path, query, ...)}}{
+    \item{\code{get(path, query, disk, stream, ...)}}{
       Make a GET request
     }
-    \item{\code{post(path, query, body, ...)}}{
+    \item{\code{post(path, query, body, disk, stream, ...)}}{
       Make a POST request
     }
-    \item{\code{put(path, query, body, ...)}}{
+    \item{\code{put(path, query, body, disk, stream, ...)}}{
       Make a PUT request
     }
-    \item{\code{patch(path, query, body, ...)}}{
+    \item{\code{patch(path, query, body, disk, stream, ...)}}{
       Make a PATCH request
     }
-    \item{\code{delete(path, query, body, ...)}}{
+    \item{\code{delete(path, query, body, disk, stream, ...)}}{
       Make a DELETE request
     }
-    \item{\code{head(path, query, ...)}}{
+    \item{\code{head(path, disk, stream, ...)}}{
       Make a HEAD request
     }
   }
+
+Possible parameters (not all are allowed in each HTTP verb):
+\itemize{
+ \item path - URL path, appended to the base URL
+ \item query - query terms, as a list
+ \item body - body as an R list
+ \item disk - a path to write to. if NULL (default), memory used
+ \item stream - an R function to determine how to stream data. if
+ NULL (default), memory used
+ \item ... curl options, only those in the acceptable set from
+ \code{\link[curl]{curl_options}} except the following: httpget, httppost,
+ post, postfields, postfieldsize, and customrequest
+}
 }
 \examples{
-\dontrun{
 (x <- HttpClient$new(url = "https://httpbin.org"))
 x$url
 (res_get1 <- x$get('get'))
@@ -69,7 +81,7 @@ x$post('post')
 # head request
 (res_head <- x$head())
 
-# set options on client initialization
+# set curl options on client initialization
 (res <- HttpClient$new(
   url = "https://httpbin.org",
   opts = list(
@@ -79,6 +91,13 @@ x$post('post')
 ))
 res$opts
 res$get('get')
+
+# or set curl options when performing HTTP operation
+(res <- HttpClient$new(url = "https://httpbin.org"))
+res$get('get', verbose = TRUE)
+\dontrun{res$get('get', stuff = "things")}
+\dontrun{res$get('get', httpget = TRUE)}
+
 
 # set headers
 (res <- HttpClient$new(
@@ -104,7 +123,18 @@ res$get('get')
 h <- handle("https://httpbin.org")
 (res <- HttpClient$new(handle = h))
 out <- res$get("get")
-}
+
+# write to disk
+(x <- HttpClient$new(url = "https://httpbin.org"))
+f <- tempfile()
+res <- x$get(disk = f)
+res$content # when using write to disk, content is a path
+readLines(res$content)
+
+# streaming response
+(x <- HttpClient$new(url = "https://httpbin.org"))
+res <- x$get('stream/50', stream = function(x) cat(rawToChar(x)))
+res$content # when streaming, content is NULL
 }
 \keyword{datasets}
 

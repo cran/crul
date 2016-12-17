@@ -3,13 +3,12 @@ crul
 
 
 
-[![Build Status](https://travis-ci.org/ropenscilabs/crul.svg?branch=master)](https://travis-ci.org/ropenscilabs/crul)
-[![codecov](https://codecov.io/gh/ropenscilabs/crul/branch/master/graph/badge.svg)](https://codecov.io/gh/ropenscilabs/crul)
+[![Build Status](https://travis-ci.org/ropensci/crul.svg?branch=master)](https://travis-ci.org/ropensci/crul)
+[![codecov](https://codecov.io/gh/ropensci/crul/branch/master/graph/badge.svg)](https://codecov.io/gh/ropensci/crul)
+[![rstudio mirror downloads](http://cranlogs.r-pkg.org/badges/crul)](https://github.com/metacran/cranlogs.app)
+[![cran version](http://www.r-pkg.org/badges/version/crul)](https://cran.r-project.org/package=crul)
 
-An HTTP client, with perhaps the main goal being to hook into 
-[webmockr](https://github.com/ropenscilabs/webmockr) and 
-[vcr](https://github.com/ropenscilabs/vcr) for flexible and easy 
-http request caching.
+An HTTP client, taking inspiration from Rubyland's [faraday](https://rubygems.org/gems/faraday).
 
 ## Installation
 
@@ -25,7 +24,7 @@ Dev version
 
 ```r
 install.packages("devtools")
-devtools::install_github("ropenscilabs/crul")
+devtools::install_github("ropensci/crul")
 ```
 
 
@@ -56,8 +55,8 @@ library("crul")
 #>     a: hello world
 ```
 
-Makes a R6 class, that has all the bits and bobs you'd expect for doing HTTP 
-requests. When it prints, it gives any defaults you've set. As you update 
+Makes a R6 class, that has all the bits and bobs you'd expect for doing HTTP
+requests. When it prints, it gives any defaults you've set. As you update
 the object you can see what's been set
 
 
@@ -74,13 +73,16 @@ x$headers
 #> [1] "hello world"
 ```
 
+You can also pass in curl options when you make HTTP requests, see below
+for examples.
+
 ## do some http
 
-The client object created above has http methods that you can call, 
-and pass paths to, as well as query parameters, body values, and any other 
+The client object created above has http methods that you can call,
+and pass paths to, as well as query parameters, body values, and any other
 curl options.
 
-Here, we'll do a __GET__ request on the route `/get` on our base url 
+Here, we'll do a __GET__ request on the route `/get` on our base url
 `https://httpbin.org` (the full url is then `https://httpbin.org/get`)
 
 
@@ -88,8 +90,8 @@ Here, we'll do a __GET__ request on the route `/get` on our base url
 res <- x$get("get")
 ```
 
-The response from a http request is another R6 class `HttpResponse`, which 
-has slots for the outputs of the request, and some functions to deal with 
+The response from a http request is another R6 class `HttpResponse`, which
+has slots for the outputs of the request, and some functions to deal with
 the response:
 
 Status code
@@ -98,6 +100,16 @@ Status code
 ```r
 res$status_code
 #> [1] 200
+```
+
+Status information
+
+
+```r
+res$status_http()
+#> <Status code: 200>
+#>   Message: OK
+#>   Explanation: Request fulfilled, document follows
 ```
 
 The content
@@ -112,12 +124,12 @@ res$content
 #>  [93] 6e 63 6f 64 69 6e 67 22 3a 20 22 67 7a 69 70 2c 20 64 65 66 6c 61 74
 #> [116] 65 22 2c 20 0a 20 20 20 20 22 48 6f 73 74 22 3a 20 22 68 74 74 70 62
 #> [139] 69 6e 2e 6f 72 67 22 2c 20 0a 20 20 20 20 22 55 73 65 72 2d 41 67 65
-#> [162] 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 34 39 2e 31 20 72 2d
-#> [185] 63 75 72 6c 2f 32 2e 32 20 63 72 75 6c 2f 30 2e 30 2e 38 2e 39 30 30
-#> [208] 30 22 0a 20 20 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 31
-#> [231] 35 37 2e 31 33 30 2e 31 37 39 2e 38 36 22 2c 20 0a 20 20 22 75 72 6c
-#> [254] 22 3a 20 22 68 74 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67
-#> [277] 2f 67 65 74 22 0a 7d 0a
+#> [162] 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 35 31 2e 30 20 72 2d
+#> [185] 63 75 72 6c 2f 32 2e 33 20 63 72 75 6c 2f 30 2e 31 2e 36 22 0a 20 20
+#> [208] 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 37 31 2e 36 33 2e
+#> [231] 32 32 33 2e 31 31 33 22 2c 20 0a 20 20 22 75 72 6c 22 3a 20 22 68 74
+#> [254] 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67 2f 67 65 74 22 0a
+#> [277] 7d 0a
 ```
 
 HTTP method
@@ -141,17 +153,23 @@ Response headers
 
 
 ```r
-res$request_headers
-#> $a
-#> [1] "hello world"
+res$response_headers
+#> [1] "HTTP/1.1 200 OK"                       
+#> [2] "Server: nginx"                         
+#> [3] "Date: Sat, 17 Dec 2016 01:07:03 GMT"   
+#> [4] "Content-Type: application/json"        
+#> [5] "Content-Length: 278"                   
+#> [6] "Connection: keep-alive"                
+#> [7] "Access-Control-Allow-Origin: *"        
+#> [8] "Access-Control-Allow-Credentials: true"
 ```
 
-And you can parse the content with a provided function:
+And you can parse the content with `parse()`
 
 
 ```r
 res$parse()
-#> [1] "{\n  \"args\": {}, \n  \"headers\": {\n    \"A\": \"hello world\", \n    \"Accept\": \"*/*\", \n    \"Accept-Encoding\": \"gzip, deflate\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"libcurl/7.49.1 r-curl/2.2 crul/0.0.8.9000\"\n  }, \n  \"origin\": \"157.130.179.86\", \n  \"url\": \"https://httpbin.org/get\"\n}\n"
+#> [1] "{\n  \"args\": {}, \n  \"headers\": {\n    \"A\": \"hello world\", \n    \"Accept\": \"*/*\", \n    \"Accept-Encoding\": \"gzip, deflate\", \n    \"Host\": \"httpbin.org\", \n    \"User-Agent\": \"libcurl/7.51.0 r-curl/2.3 crul/0.1.6\"\n  }, \n  \"origin\": \"71.63.223.113\", \n  \"url\": \"https://httpbin.org/get\"\n}\n"
 jsonlite::fromJSON(res$parse())
 #> $args
 #> named list()
@@ -170,22 +188,41 @@ jsonlite::fromJSON(res$parse())
 #> [1] "httpbin.org"
 #> 
 #> $headers$`User-Agent`
-#> [1] "libcurl/7.49.1 r-curl/2.2 crul/0.0.8.9000"
+#> [1] "libcurl/7.51.0 r-curl/2.3 crul/0.1.6"
 #> 
 #> 
 #> $origin
-#> [1] "157.130.179.86"
+#> [1] "71.63.223.113"
 #> 
 #> $url
 #> [1] "https://httpbin.org/get"
 ```
 
+## curl options
+
+
+```r
+res <- HttpClient$new(url = "http://api.gbif.org/v1/occurrence/search")
+res$get(query = list(limit = 100), timeout_ms = 100)
+#> Error in curl::curl_fetch_memory(x$url$url, handle = x$url$handle) : 
+#>   Timeout was reached
+```
+
+## TO DO
+
+Add integration for:
+
+* [webmockr](https://github.com/ropensci/webmockr)
+* [vcr](https://github.com/ropensci/vcr) 
+
+for flexible and easy HTTP request caching
+
 ## Meta
 
-* Please [report any issues or bugs](https://github.com/ropenscilabs/crul/issues).
+* Please [report any issues or bugs](https://github.com/ropensci/crul/issues).
 * License: MIT
 * Get citation information for `crul` in R doing `citation(package = 'crul')`
-* Please note that this project is released with a [Contributor Code of Conduct](CONDUCT.md). 
+* Please note that this project is released with a [Contributor Code of Conduct](CONDUCT.md).
 By participating in this project you agree to abide by its terms.
 
-[![ropensci_footer](http://ropensci.org/public_images/github_footer.png)](http://ropensci.org)
+[![ropensci_footer](https://ropensci.org/public_images/github_footer.png)](https://ropensci.org)

@@ -7,28 +7,40 @@
 #' @details
 #' \strong{Methods}
 #'   \describe{
-#'     \item{\code{get(path, query, ...)}}{
+#'     \item{\code{get(path, query, disk, stream, ...)}}{
 #'       Make a GET request
 #'     }
-#'     \item{\code{post(path, query, body, ...)}}{
+#'     \item{\code{post(path, query, body, disk, stream, ...)}}{
 #'       Make a POST request
 #'     }
-#'     \item{\code{put(path, query, body, ...)}}{
+#'     \item{\code{put(path, query, body, disk, stream, ...)}}{
 #'       Make a PUT request
 #'     }
-#'     \item{\code{patch(path, query, body, ...)}}{
+#'     \item{\code{patch(path, query, body, disk, stream, ...)}}{
 #'       Make a PATCH request
 #'     }
-#'     \item{\code{delete(path, query, body, ...)}}{
+#'     \item{\code{delete(path, query, body, disk, stream, ...)}}{
 #'       Make a DELETE request
 #'     }
-#'     \item{\code{head(path, query, ...)}}{
+#'     \item{\code{head(path, disk, stream, ...)}}{
 #'       Make a HEAD request
 #'     }
 #'   }
 #' @format NULL
 #' @usage NULL
-#' @examples \dontrun{
+#' @details Possible parameters (not all are allowed in each HTTP verb):
+#' \itemize{
+#'  \item path - URL path, appended to the base URL
+#'  \item query - query terms, as a list
+#'  \item body - body as an R list
+#'  \item disk - a path to write to. if NULL (default), memory used
+#'  \item stream - an R function to determine how to stream data. if
+#'  NULL (default), memory used
+#'  \item ... curl options, only those in the acceptable set from
+#'  \code{\link[curl]{curl_options}} except the following: httpget, httppost,
+#'  post, postfields, postfieldsize, and customrequest
+#' }
+#' @examples
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' x$url
 #' (res_get1 <- x$get('get'))
@@ -59,7 +71,7 @@
 #' # head request
 #' (res_head <- x$head())
 #'
-#' # set options on client initialization
+#' # set curl options on client initialization
 #' (res <- HttpClient$new(
 #'   url = "https://httpbin.org",
 #'   opts = list(
@@ -69,6 +81,13 @@
 #' ))
 #' res$opts
 #' res$get('get')
+#'
+#' # or set curl options when performing HTTP operation
+#' (res <- HttpClient$new(url = "https://httpbin.org"))
+#' res$get('get', verbose = TRUE)
+#' \dontrun{res$get('get', stuff = "things")}
+#' \dontrun{res$get('get', httpget = TRUE)}
+#'
 #'
 #' # set headers
 #' (res <- HttpClient$new(
@@ -94,7 +113,19 @@
 #' h <- handle("https://httpbin.org")
 #' (res <- HttpClient$new(handle = h))
 #' out <- res$get("get")
-#' }
+#'
+#' # write to disk
+#' (x <- HttpClient$new(url = "https://httpbin.org"))
+#' f <- tempfile()
+#' res <- x$get(disk = f)
+#' res$content # when using write to disk, content is a path
+#' readLines(res$content)
+#'
+#' # streaming response
+#' (x <- HttpClient$new(url = "https://httpbin.org"))
+#' res <- x$get('stream/50', stream = function(x) cat(rawToChar(x)))
+#' res$content # when streaming, content is NULL
+
 HttpClient <- R6::R6Class(
   'HttpClient',
   public = list(
@@ -129,7 +160,9 @@ HttpClient <- R6::R6Class(
       }
     },
 
-    get = function(path = NULL, query = list(), ...) {
+    get = function(path = NULL, query = list(), disk = NULL,
+                   stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       rr <- list(
         url = url,
@@ -140,11 +173,15 @@ HttpClient <- R6::R6Class(
         ),
         headers = self$headers
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     },
 
-    post = function(path = NULL, query = list(), body = NULL, ...) {
+    post = function(path = NULL, query = list(), body = NULL, disk = NULL,
+                    stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(post = TRUE)
       if (is.null(body)) {
@@ -162,10 +199,14 @@ HttpClient <- R6::R6Class(
         fields = body
       )
       rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     },
 
-    put = function(path = NULL, query = list(), body = NULL, ...) {
+    put = function(path = NULL, query = list(), body = NULL, disk = NULL,
+                   stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "PUT")
       if (is.null(body)) {
@@ -183,10 +224,14 @@ HttpClient <- R6::R6Class(
         fields = body
       )
       rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     },
 
-    patch = function(path = NULL, query = list(), body = NULL, ...) {
+    patch = function(path = NULL, query = list(), body = NULL, disk = NULL,
+                     stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "PATCH")
       if (is.null(body)) {
@@ -204,10 +249,14 @@ HttpClient <- R6::R6Class(
         fields = body
       )
       rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     },
 
-    delete = function(path = NULL, query = list(), body = NULL, ...) {
+    delete = function(path = NULL, query = list(), body = NULL, disk = NULL,
+                      stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "DELETE")
       if (is.null(body)) {
@@ -225,10 +274,13 @@ HttpClient <- R6::R6Class(
         fields = body
       )
       rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     },
 
-    head = function(path = NULL, ...) {
+    head = function(path = NULL, disk = NULL, stream = NULL, ...) {
+      curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, NULL)
       opts <- list(customrequest = "HEAD", nobody = TRUE)
       rr <- list(
@@ -241,6 +293,8 @@ HttpClient <- R6::R6Class(
         headers = self$headers
       )
       rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$disk <- disk
+      rr$stream <- stream
       private$make_request(rr)
     }
   ),
@@ -249,13 +303,18 @@ HttpClient <- R6::R6Class(
     request = NULL,
 
     make_request = function(opts) {
+      if (xor(!is.null(opts$disk), !is.null(opts$stream))) {
+        if (!is.null(opts$disk) && !is.null(opts$stream)) {
+          stop("disk and stream can not be used together", call. = FALSE)
+        }
+      }
       curl::handle_setopt(opts$url$handle, .list = opts$options)
       if (!is.null(opts$fields)) {
         curl::handle_setform(opts$url$handle, .list = opts$fields)
       }
       curl::handle_setheaders(opts$url$handle, .list = opts$headers)
       on.exit(curl::handle_reset(opts$url$handle), add = TRUE)
-      resp <- curl::curl_fetch_memory(opts$url$url, opts$url$handle)
+      resp <- crul_fetch(opts)
 
       HttpResponse$new(
         method = opts$method,
