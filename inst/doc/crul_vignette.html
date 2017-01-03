@@ -294,7 +294,7 @@ the response:</p>
 #&gt; [116] 65 22 2c 20 0a 20 20 20 20 22 48 6f 73 74 22 3a 20 22 68 74 74 70 62
 #&gt; [139] 69 6e 2e 6f 72 67 22 2c 20 0a 20 20 20 20 22 55 73 65 72 2d 41 67 65
 #&gt; [162] 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 35 31 2e 30 20 72 2d
-#&gt; [185] 63 75 72 6c 2f 32 2e 33 20 63 72 75 6c 2f 30 2e 31 2e 36 22 0a 20 20
+#&gt; [185] 63 75 72 6c 2f 32 2e 33 20 63 72 75 6c 2f 30 2e 32 2e 30 22 0a 20 20
 #&gt; [208] 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 37 31 2e 36 33 2e
 #&gt; [231] 32 32 33 2e 31 31 33 22 2c 20 0a 20 20 22 75 72 6c 22 3a 20 22 68 74
 #&gt; [254] 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67 2f 67 65 74 22 0a
@@ -310,6 +310,9 @@ the response:</p>
 <p>Request headers</p>
 
 <pre><code class="r">res$request_headers
+#&gt; $useragent
+#&gt; [1] &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;
+#&gt; 
 #&gt; $a
 #&gt; [1] &quot;hello world&quot;
 </code></pre>
@@ -317,20 +320,35 @@ the response:</p>
 <p>Response headers</p>
 
 <pre><code class="r">res$response_headers
-#&gt; [1] &quot;HTTP/1.1 200 OK&quot;                       
-#&gt; [2] &quot;Server: nginx&quot;                         
-#&gt; [3] &quot;Date: Sat, 17 Dec 2016 01:17:22 GMT&quot;   
-#&gt; [4] &quot;Content-Type: application/json&quot;        
-#&gt; [5] &quot;Content-Length: 278&quot;                   
-#&gt; [6] &quot;Connection: keep-alive&quot;                
-#&gt; [7] &quot;Access-Control-Allow-Origin: *&quot;        
-#&gt; [8] &quot;Access-Control-Allow-Credentials: true&quot;
+#&gt; $status
+#&gt; [1] &quot;HTTP/1.1 200 OK&quot;
+#&gt; 
+#&gt; $server
+#&gt; [1] &quot;nginx&quot;
+#&gt; 
+#&gt; $date
+#&gt; [1] &quot;Tue, 03 Jan 2017 05:52:03 GMT&quot;
+#&gt; 
+#&gt; $`content-type`
+#&gt; [1] &quot;application/json&quot;
+#&gt; 
+#&gt; $`content-length`
+#&gt; [1] &quot;278&quot;
+#&gt; 
+#&gt; $connection
+#&gt; [1] &quot;keep-alive&quot;
+#&gt; 
+#&gt; $`access-control-allow-origin`
+#&gt; [1] &quot;*&quot;
+#&gt; 
+#&gt; $`access-control-allow-credentials`
+#&gt; [1] &quot;true&quot;
 </code></pre>
 
 <p>And you can parse the content with a provided function:</p>
 
 <pre><code class="r">res$parse()
-#&gt; [1] &quot;{\n  \&quot;args\&quot;: {}, \n  \&quot;headers\&quot;: {\n    \&quot;A\&quot;: \&quot;hello world\&quot;, \n    \&quot;Accept\&quot;: \&quot;*/*\&quot;, \n    \&quot;Accept-Encoding\&quot;: \&quot;gzip, deflate\&quot;, \n    \&quot;Host\&quot;: \&quot;httpbin.org\&quot;, \n    \&quot;User-Agent\&quot;: \&quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6\&quot;\n  }, \n  \&quot;origin\&quot;: \&quot;71.63.223.113\&quot;, \n  \&quot;url\&quot;: \&quot;https://httpbin.org/get\&quot;\n}\n&quot;
+#&gt; [1] &quot;{\n  \&quot;args\&quot;: {}, \n  \&quot;headers\&quot;: {\n    \&quot;A\&quot;: \&quot;hello world\&quot;, \n    \&quot;Accept\&quot;: \&quot;*/*\&quot;, \n    \&quot;Accept-Encoding\&quot;: \&quot;gzip, deflate\&quot;, \n    \&quot;Host\&quot;: \&quot;httpbin.org\&quot;, \n    \&quot;User-Agent\&quot;: \&quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0\&quot;\n  }, \n  \&quot;origin\&quot;: \&quot;71.63.223.113\&quot;, \n  \&quot;url\&quot;: \&quot;https://httpbin.org/get\&quot;\n}\n&quot;
 jsonlite::fromJSON(res$parse())
 #&gt; $args
 #&gt; named list()
@@ -349,7 +367,7 @@ jsonlite::fromJSON(res$parse())
 #&gt; [1] &quot;httpbin.org&quot;
 #&gt; 
 #&gt; $headers$`User-Agent`
-#&gt; [1] &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;
+#&gt; [1] &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;
 #&gt; 
 #&gt; 
 #&gt; $origin
@@ -370,16 +388,17 @@ request:</p>
 #&gt; &lt;crul response&gt; 
 #&gt;   url: https://httpbin.org/post
 #&gt;   request_headers: 
+#&gt;     useragent: libcurl/7.51.0 r-curl/2.3 crul/0.2.0
 #&gt;     a: hello world
 #&gt;   response_headers: 
-#&gt;     HTTP/1.1 200 OK
-#&gt;     Server: nginx
-#&gt;     Date: Sat, 17 Dec 2016 01:17:22 GMT
-#&gt;     Content-Type: application/json
-#&gt;     Content-Length: 491
-#&gt;     Connection: keep-alive
-#&gt;     Access-Control-Allow-Origin: *
-#&gt;     Access-Control-Allow-Credentials: true
+#&gt;     status: HTTP/1.1 200 OK
+#&gt;     server: nginx
+#&gt;     date: Tue, 03 Jan 2017 05:52:03 GMT
+#&gt;     content-type: application/json
+#&gt;     content-length: 491
+#&gt;     connection: keep-alive
+#&gt;     access-control-allow-origin: *
+#&gt;     access-control-allow-credentials: true
 #&gt;   status: 200
 </code></pre>
 
@@ -390,7 +409,7 @@ f &lt;- tempfile()
 res &lt;- x$get(disk = f)
 # when using write to disk, content is a path
 res$content 
-#&gt; [1] &quot;/var/folders/gs/4khph0xs0436gmd2gdnwsg080000gn/T//RtmpzMxcbq/file1446b173dd896&quot;
+#&gt; [1] &quot;/var/folders/gs/4khph0xs0436gmd2gdnwsg080000gn/T//RtmpoZ8Rrd/fileee7a81dea18&quot;
 </code></pre>
 
 <p>Read lines</p>
@@ -416,11 +435,11 @@ res$content
 #&gt;   options: 
 #&gt;   headers:
 res &lt;- x$get(&#39;stream/5&#39;, stream = function(x) cat(rawToChar(x)))
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 0, &quot;origin&quot;: &quot;71.63.223.113&quot;}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 1, &quot;origin&quot;: &quot;71.63.223.113&quot;}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 2, &quot;origin&quot;: &quot;71.63.223.113&quot;}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 3, &quot;origin&quot;: &quot;71.63.223.113&quot;}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.1.6&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 4, &quot;origin&quot;: &quot;71.63.223.113&quot;}
+#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 0, &quot;origin&quot;: &quot;71.63.223.113&quot;}
+#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 1, &quot;origin&quot;: &quot;71.63.223.113&quot;}
+#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 2, &quot;origin&quot;: &quot;71.63.223.113&quot;}
+#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 3, &quot;origin&quot;: &quot;71.63.223.113&quot;}
+#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.3 crul/0.2.0&quot;}, &quot;args&quot;: {}, &quot;id&quot;: 4, &quot;origin&quot;: &quot;71.63.223.113&quot;}
 # when streaming, content is NULL
 res$content 
 #&gt; NULL

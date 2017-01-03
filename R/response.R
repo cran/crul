@@ -33,6 +33,8 @@
 #'
 #' x <- HttpClient$new(url = 'https://httpbin.org')
 #' (res <- x$get('get'))
+#' res$request_headers
+#' res$response_headers
 #' res$parse()
 #' res$status_code
 #' res$status_http()
@@ -72,7 +74,7 @@ HttpResponse <- R6::R6Class(
       }
       cat("  response_headers: ", sep = "\n")
       for (i in seq_along(self$response_headers)) {
-        cat(paste0("    ", self$response_headers[[i]]), sep = "\n")
+        cat(sprintf("    %s: %s", names(self$response_headers)[i], self$response_headers[[i]]), sep = "\n")
       }
       params <- parse_params(self$url)
       if (!is.null(params)) {
@@ -100,8 +102,11 @@ HttpResponse <- R6::R6Class(
       if (!missing(request)) self$request <- request
     },
 
-    parse = function(type, encoding) {
-      readBin(self$content, character())
+    parse = function(encoding = NULL) {
+      # readBin(self$content, character())
+      iconv(readBin(self$content, character()),
+            from = guess_encoding(encoding),
+            to = "UTF-8")
     },
 
     success = function() {
@@ -124,6 +129,21 @@ HttpResponse <- R6::R6Class(
     }
   )
 )
+
+guess_encoding <- function(encoding = NULL) {
+  if (!is.null(encoding)) {
+    return(check_encoding(encoding))
+  } else {
+    message("No encoding supplied: defaulting to UTF-8.")
+    return("UTF-8")
+  }
+}
+
+check_encoding <- function(x) {
+  if ((tolower(x) %in% tolower(iconvlist()))) return(x)
+  message("Invalid encoding ", x, ": defaulting to UTF-8.")
+  "UTF-8"
+}
 
 parse_params <- function(x) {
   x <- urltools::parameters(x)

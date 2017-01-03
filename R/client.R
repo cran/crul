@@ -33,6 +33,7 @@
 #'  \item path - URL path, appended to the base URL
 #'  \item query - query terms, as a list
 #'  \item body - body as an R list
+#'  \item encode - one of form, multipart, json, or raw
 #'  \item disk - a path to write to. if NULL (default), memory used
 #'  \item stream - an R function to determine how to stream data. if
 #'  NULL (default), memory used
@@ -40,6 +41,10 @@
 #'  \code{\link[curl]{curl_options}} except the following: httpget, httppost,
 #'  post, postfields, postfieldsize, and customrequest
 #' }
+#'
+#' @seealso \code{\link{post-requests}}, \code{\link{http-headers}},
+#' \code{\link{writing-options}}
+#'
 #' @examples
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' x$url
@@ -71,60 +76,10 @@
 #' # head request
 #' (res_head <- x$head())
 #'
-#' # set curl options on client initialization
-#' (res <- HttpClient$new(
-#'   url = "https://httpbin.org",
-#'   opts = list(
-#'     verbose = TRUE,
-#'     useragent = "hello world"
-#'   )
-#' ))
-#' res$opts
-#' res$get('get')
-#'
-#' # or set curl options when performing HTTP operation
-#' (res <- HttpClient$new(url = "https://httpbin.org"))
-#' res$get('get', verbose = TRUE)
-#' \dontrun{res$get('get', stuff = "things")}
-#' \dontrun{res$get('get', httpget = TRUE)}
-#'
-#'
-#' # set headers
-#' (res <- HttpClient$new(
-#'   url = "https://httpbin.org",
-#'   opts = list(
-#'     verbose = TRUE
-#'   ),
-#'   headers = list(
-#'     a = "stuff",
-#'     b = "things"
-#'   )
-#' ))
-#' res$headers
-#' # reassign header value
-#' res$headers$a <- "that"
-#' # define new header
-#' res$headers$c <- "what"
-#' # request
-#' res$get('get')
-#'
-#'
-#' # handles - pass in your own handle
-#' h <- handle("https://httpbin.org")
-#' (res <- HttpClient$new(handle = h))
-#' out <- res$get("get")
-#'
-#' # write to disk
+#' # query params are URL encoded for you, so DO NOT do it yourself
+#' ## if you url encode yourself, it gets double encoded, and that's bad
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
-#' f <- tempfile()
-#' res <- x$get(disk = f)
-#' res$content # when using write to disk, content is a path
-#' readLines(res$content)
-#'
-#' # streaming response
-#' (x <- HttpClient$new(url = "https://httpbin.org"))
-#' res <- x$get('stream/50', stream = function(x) cat(rawToChar(x)))
-#' res$content # when streaming, content is NULL
+#' res <- x$get("get", query = list(a = 'hello world'), verbose = TRUE)
 
 HttpClient <- R6::R6Class(
   'HttpClient',
@@ -180,32 +135,33 @@ HttpClient <- R6::R6Class(
     },
 
     post = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                    stream = NULL, ...) {
+                    stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
-      opts <- list(post = TRUE)
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
+      # opts <- list(post = TRUE)
+      # if (is.null(body)) {
+      #   opts$postfields <- raw(0)
+      #   opts$postfieldsize <- 0
+      # }
+      opts <- prep_body(body, encode)
       rr <- list(
         url = url,
         method = "post",
-        options = c(
-          opts,
+        options = as.list(c(
+          opts$opts,
           useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
+        )),
+        headers = c(self$headers, opts$type),
+        fields = opts$fields
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     put = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                   stream = NULL, ...) {
+                   stream = NULL, encode = NULL, ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "PUT")
@@ -223,14 +179,14 @@ HttpClient <- R6::R6Class(
         headers = self$headers,
         fields = body
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     patch = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                     stream = NULL, ...) {
+                     stream = NULL, encode = NULL, ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "PATCH")
@@ -248,14 +204,14 @@ HttpClient <- R6::R6Class(
         headers = self$headers,
         fields = body
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     delete = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                      stream = NULL, ...) {
+                      stream = NULL, encode = NULL, ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- list(customrequest = "DELETE")
@@ -273,7 +229,7 @@ HttpClient <- R6::R6Class(
         headers = self$headers,
         fields = body
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
@@ -292,7 +248,7 @@ HttpClient <- R6::R6Class(
         ),
         headers = self$headers
       )
-      rr$options <- utils::modifyList(rr$options, self$opts)
+      rr$options <- utils::modifyList(rr$options, c(self$opts, ...))
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
@@ -320,8 +276,10 @@ HttpClient <- R6::R6Class(
         method = opts$method,
         url = resp$url,
         status_code = resp$status_code,
-        request_headers = c(useragent = opts$useragent, opts$headers),
-        response_headers = curl::parse_headers(rawToChar(resp$headers)),
+        request_headers = c(useragent = opts$options$useragent, opts$headers),
+        response_headers = {
+          headers_parse(curl::parse_headers(rawToChar(resp$headers)))
+        },
         modified = resp$modified,
         times = resp$times,
         content = resp$content,
