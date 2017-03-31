@@ -1,11 +1,36 @@
+crul 0.3.4
+==========
+
+### NEW FEATURES
+
+* New utility functions `url_build` and `url_parse` (#31)
+
+### MINOR IMPROVEMENTS
+
+* Now using markdown for documentation (#32)
+* Better documentation for `AsyncVaried` (#30)
+* New vignette on how to use `crul` in realistic
+scenarios rather than brief examples to demonstrate
+individual features (#29)
+* Better documentation for `HttpRequest` (#28)
+* Included more tests
+
+### BUG FIXES
+
+* Fixed put/patch/delete as weren't passing body
+correctly in `HttpClient` (#26)
+* DRY out code for preparing requests - simplify to
+use helper functions (#27)
+
+
 crul 0.3.0
 ==========
 
 ### NEW FEATURES
 
 * Added support for asynchronous HTTP requests, including two new
-R6 classes: `Async` and `AsyncVaried`. The former being a simpler 
-interface treating all URLs with same options/HTTP method, and the latter 
+R6 classes: `Async` and `AsyncVaried`. The former being a simpler
+interface treating all URLs with same options/HTTP method, and the latter
 allowing any type of request through the new R6 class `HttpRequest` (#8) (#24)
 * New R6 class `HttpRequest` to support `AsyncVaried` - this method
 only defines a request, but does not execute it. (#8)
@@ -17,6 +42,9 @@ only defines a request, but does not execute it. (#8)
 ### BUG FIXES
 
 * Fixed parsing of headers from FTP servers (#21)
+
+
+
 
 
 crul 0.2.0
@@ -34,6 +62,8 @@ caused errors previously (#11)
 * response headers now parsed to a list for easier access (#14)
 * Now supporting multiple query parameters of the same name, wasn't
 possible in last version (#15)
+
+
 
 
 crul 0.1.6
@@ -66,6 +96,10 @@ streaming or disk allowed. (#12)
 
 * Was importing `httpcode` but wasn't using it in the package.
 Now using the package in `HttpResponse`
+
+
+
+
 
 
 crul 0.1.0

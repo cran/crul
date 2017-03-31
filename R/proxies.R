@@ -8,7 +8,7 @@
 #' @param auth (character) authentication type, one of basic (default),
 #' digest, digest_ie, gssnegotiate, ntlm, or any. optional
 #'
-#' @details See http://proxylist.hidemyass.com/ for a list of proxies you
+#' @details See <http://proxylist.hidemyass.com/> for a list of proxies you
 #' can use
 #'
 #' @examples
@@ -70,6 +70,8 @@ proxy_url <- function(x) {
 }
 
 proxy_up <- function(user, pwd) {
+  assert(user, "character")
+  assert(pwd, "character")
   if (!is.null(user) || !is.null(pwd)) {
     return(paste0(user, ":", pwd))
   }
@@ -90,5 +92,6 @@ proxy_auth <- function(x) {
 }
 
 purl <- function(x) {
-  sprintf("http://%s:%s (auth: %s)", x$proxy, x$proxyport, !is.null(x$proxyuserpwd))
+  sprintf("http://%s:%s (auth: %s)",
+          x$proxy, x$proxyport, !is.null(x$proxyuserpwd))
 }

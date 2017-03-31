@@ -3,24 +3,24 @@
 #' @export
 #' @template args
 #' @details
-#' \strong{Methods}
+#' **Methods**
 #'   \describe{
-#'     \item{\code{get(path, query, disk, stream, ...)}}{
+#'     \item{`get(path, query, disk, stream, ...)`}{
 #'       Make a GET request
 #'     }
-#'     \item{\code{post(path, query, body, disk, stream, ...)}}{
+#'     \item{`post(path, query, body, disk, stream, ...)`}{
 #'       Make a POST request
 #'     }
-#'     \item{\code{put(path, query, body, disk, stream, ...)}}{
+#'     \item{`put(path, query, body, disk, stream, ...)`}{
 #'       Make a PUT request
 #'     }
-#'     \item{\code{patch(path, query, body, disk, stream, ...)}}{
+#'     \item{`patch(path, query, body, disk, stream, ...)`}{
 #'       Make a PATCH request
 #'     }
-#'     \item{\code{delete(path, query, body, disk, stream, ...)}}{
+#'     \item{`delete(path, query, body, disk, stream, ...)`}{
 #'       Make a DELETE request
 #'     }
-#'     \item{\code{head(path, disk, stream, ...)}}{
+#'     \item{`head(path, disk, stream, ...)`}{
 #'       Make a HEAD request
 #'     }
 #'   }
@@ -34,17 +34,17 @@
 #'  \item body - body as an R list
 #'  \item encode - one of form, multipart, json, or raw
 #'  \item disk - a path to write to. if NULL (default), memory used.
-#'  See \code{\link[curl]{curl_fetch_disk}} for help.
+#'  See [curl::curl_fetch_disk()] for help.
 #'  \item stream - an R function to determine how to stream data. if
-#'  NULL (default), memory used. See \code{\link[curl]{curl_fetch_stream}}
+#'  NULL (default), memory used. See [curl::curl_fetch_stream()]
 #'  for help
 #'  \item ... curl options, only those in the acceptable set from
-#'  \code{\link[curl]{curl_options}} except the following: httpget, httppost,
+#'  [curl::curl_options()] except the following: httpget, httppost,
 #'  post, postfields, postfieldsize, and customrequest
 #' }
 #'
-#' @seealso \code{\link{post-requests}}, \code{\link{http-headers}},
-#' \code{\link{writing-options}}
+#' @seealso [post-requests], [delete-requests], [http-headers],
+#' [writing-options]
 #'
 #' @examples
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
@@ -153,96 +153,40 @@ HttpClient <- R6::R6Class(
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
       opts <- prep_body(body, encode)
-      rr <- list(
-        url = url,
-        method = "post",
-        options = as.list(c(
-          opts$opts,
-          useragent = make_ua()
-        )),
-        headers = c(self$headers, opts$type),
-        fields = opts$fields
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      rr <- prep_opts("post", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     put = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                   stream = NULL, encode = NULL, ...) {
+                   stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
-      opts <- list(customrequest = "PUT")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "put",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("put", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     patch = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                     stream = NULL, encode = NULL, ...) {
+                     stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
-      opts <- list(customrequest = "PATCH")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "patch",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("patch", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)
     },
 
     delete = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                      stream = NULL, encode = NULL, ...) {
+                      stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
       url <- make_url(self$url, self$handle, path, query)
-      opts <- list(customrequest = "DELETE")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "delete",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("delete", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       private$make_request(rr)

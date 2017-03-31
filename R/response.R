@@ -1,26 +1,34 @@
 #' Base response object
 #'
 #' @export
-#' @param url (character) A url
+#' @param url (character) A url, required
 #' @param opts (list) curl options
 #' @param handle A handle
+#' @param method (character) HTTP method
+#' @param status_code (integer) status code
+#' @param request_headers (list) request headers, named list
+#' @param response_headers (list) response headers, named list
+#' @param modified (character) modified date
+#' @param times (vector) named vector
+#' @param content (raw) raw binary content response
+#' @param request request object, with all details
 #' @details
-#' \strong{Methods}
+#' **Methods**
 #'   \describe{
-#'     \item{\code{parse()}}{
+#'     \item{`parse()`}{
 #'       Parse the raw response content to text
 #'     }
-#'     \item{\code{success()}}{
+#'     \item{`success()`}{
 #'       Was status code less than or equal to 201.
 #'       returns boolean
 #'     }
-#'     \item{\code{status_http()}}{
+#'     \item{`status_http()`}{
 #'       Get HTTP status code, message, and explanation
 #'     }
-#'     \item{\code{raise_for_status()}}{
+#'     \item{`raise_for_status()`}{
 #'       Check HTTP status and stop with appropriate
 #'       HTTP error code and message if >= 300.
-#'       - If you have \code{fauxpas} installed we use that,
+#'       - If you have `fauxpas` installed we use that,
 #'       otherwise use \pkg{httpcode}
 #'     }
 #'   }
@@ -95,7 +103,7 @@ HttpResponse <- R6::R6Class(
                           content, request) {
 
       if (!missing(method)) self$method <- method
-      if (!missing(url)) self$url <- url
+      self$url <- url
       if (!missing(opts)) self$opts <- opts
       if (!missing(handle)) self$handle <- handle
       if (!missing(status_code)) self$status_code <- as.numeric(status_code)

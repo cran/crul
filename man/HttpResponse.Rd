@@ -5,35 +5,51 @@
 \alias{HttpResponse}
 \title{Base response object}
 \arguments{
-\item{url}{(character) A url}
+\item{url}{(character) A url, required}
 
 \item{opts}{(list) curl options}
 
 \item{handle}{A handle}
+
+\item{method}{(character) HTTP method}
+
+\item{status_code}{(integer) status code}
+
+\item{request_headers}{(list) request headers, named list}
+
+\item{response_headers}{(list) response headers, named list}
+
+\item{modified}{(character) modified date}
+
+\item{times}{(vector) named vector}
+
+\item{content}{(raw) raw binary content response}
+
+\item{request}{request object, with all details}
 }
 \description{
 Base response object
 }
 \details{
 \strong{Methods}
-  \describe{
-    \item{\code{parse()}}{
-      Parse the raw response content to text
-    }
-    \item{\code{success()}}{
-      Was status code less than or equal to 201.
-      returns boolean
-    }
-    \item{\code{status_http()}}{
-      Get HTTP status code, message, and explanation
-    }
-    \item{\code{raise_for_status()}}{
-      Check HTTP status and stop with appropriate
-      HTTP error code and message if >= 300.
-      - If you have \code{fauxpas} installed we use that,
-      otherwise use \pkg{httpcode}
-    }
-  }
+\describe{
+\item{\code{parse()}}{
+Parse the raw response content to text
+}
+\item{\code{success()}}{
+Was status code less than or equal to 201.
+returns boolean
+}
+\item{\code{status_http()}}{
+Get HTTP status code, message, and explanation
+}
+\item{\code{raise_for_status()}}{
+Check HTTP status and stop with appropriate
+HTTP error code and message if >= 300.
+- If you have \code{fauxpas} installed we use that,
+otherwise use \pkg{httpcode}
+}
+}
 }
 \examples{
 x <- HttpResponse$new(method = "get", url = "https://httpbin.org")

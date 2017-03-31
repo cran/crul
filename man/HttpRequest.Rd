@@ -22,34 +22,54 @@ HTTP request object
 }
 \details{
 This R6 class doesn't do actual HTTP requests as does
-\code{\link{HttpClient}} - but is for building requests
-to use for async HTTP requests in \code{\link{AsyncVaried}}
+\code{\link[=HttpClient]{HttpClient()}} - it is for building requests to use for async HTTP
+requests in \code{\link[=AsyncVaried]{AsyncVaried()}}
+
+Note that you can access HTTP verbs after creating an \code{HttpRequest}
+object, just as you can with \code{HttpClient}. See examples for usage.
+
+Also note that when you call HTTP verbs on a \code{HttpRequest} object you
+don't need to assign the new object to a variable as the new details
+you've added are added to the object itself.
 
 \strong{Methods}
-  \describe{
-    \item{\code{get(path, query, disk, stream, ...)}}{
-      Define a GET request
-    }
-    \item{\code{post(path, query, body, disk, stream, ...)}}{
-      Define a POST request
-    }
-    \item{\code{put(path, query, body, disk, stream, ...)}}{
-      Define a PUT request
-    }
-    \item{\code{patch(path, query, body, disk, stream, ...)}}{
-      Define a PATCH request
-    }
-    \item{\code{delete(path, query, body, disk, stream, ...)}}{
-      Define a DELETE request
-    }
-    \item{\code{head(path, disk, stream, ...)}}{
-      Define a HEAD request
-    }
-  }
+\describe{
+\item{\code{get(path, query, disk, stream, ...)}}{
+Define a GET request
+}
+\item{\code{post(path, query, body, disk, stream, ...)}}{
+Define a POST request
+}
+\item{\code{put(path, query, body, disk, stream, ...)}}{
+Define a PUT request
+}
+\item{\code{patch(path, query, body, disk, stream, ...)}}{
+Define a PATCH request
+}
+\item{\code{delete(path, query, body, disk, stream, ...)}}{
+Define a DELETE request
+}
+\item{\code{head(path, disk, stream, ...)}}{
+Define a HEAD request
+}
+\item{\code{method()}}{
+Get the HTTP method (if defined)
+- returns character string
+}
+}
 
-See \code{\link{HttpClient}} for information on parameters.
+See \code{\link[=HttpClient]{HttpClient()}} for information on parameters.
 }
 \examples{
+x <- HttpRequest$new(url = "https://httpbin.org/get")
+## note here how the HTTP method is shown on the first line to the right
+x$get()
+
+## assign to a new object to keep the output
+z <- x$get()
+### get the HTTP method
+z$method()
+
 (x <- HttpRequest$new(url = "https://httpbin.org/get")$get())
 x$url
 x$payload
@@ -65,7 +85,7 @@ HttpRequest$new(
 )
 }
 \seealso{
-\code{\link{post-requests}}, \code{\link{http-headers}},
-\code{\link{writing-options}}
+\link{post-requests}, \link{delete-requests},
+\link{http-headers}, \link{writing-options}
 }
 \keyword{datasets}

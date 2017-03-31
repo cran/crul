@@ -1,33 +1,51 @@
 #' Async client for different request types
 #'
 #' @export
-#' @param ...,.list Any number of objects of class \code{\link{HttpRequest}},
+#' @param ...,.list Any number of objects of class [HttpRequest()],
 #' must supply inputs to one of these parameters, but not both
 #' @family async
-#' @return An object of class \code{AsyncVaried} with variables and methods
+#' @return An object of class `AsyncVaried` with variables and methods
 #' @details
-#' \strong{Methods}
+#' **Methods**
 #'   \describe{
-#'     \item{\code{request()}}{
-#'       execute asynchronous requests
+#'     \item{`request()`}{
+#'       Execute asynchronous requests
+#'       - returns: nothing, responses stored inside object,
+#'       though will print messages if you choose verbose output
 #'     }
-#'     \item{\code{requests()}}{
+#'     \item{`requests()`}{
 #'       list requests
+#'       - returns: a list of `HttpRequest` objects, empty list before
+#'       requests made
 #'     }
-#'     \item{\code{parse(encoding = "UTF-8")}}{
+#'     \item{`responses()`}{
+#'       list responses
+#'       - returns: a list of `HttpResponse` objects, empty list before
+#'       requests made
+#'     }
+#'     \item{`parse(encoding = "UTF-8")`}{
 #'       parse content
+#'       - returns: character vector, empty character vector before
+#'       requests made
 #'     }
-#'     \item{\code{status_code()}}{
+#'     \item{`status_code()`}{
 #'       (integer) HTTP status codes
+#'       - returns: numeric vector, empty numeric vector before
+#'       requests made
 #'     }
-#'     \item{\code{status()}}{
+#'     \item{`status()`}{
 #'       (list) HTTP status objects
+#'       - returns: a list of `http_code` objects, empty list before
+#'       requests made
 #'     }
-#'     \item{\code{content()}}{
+#'     \item{`content()`}{
 #'       raw content
+#'       - returns: raw list, empty list before requests made
 #'     }
-#'     \item{\code{times()}}{
+#'     \item{`times()`}{
 #'       curl request times
+#'       - returns: list of named numeric vectors, empty list before
+#'       requests made
 #'     }
 #'   }
 #'
@@ -41,13 +59,33 @@
 #'   headers = list(foo = "bar")
 #' )$get()
 #' req2 <- HttpRequest$new(url = "https://httpbin.org/post")$post()
+#'
+#' # Create an AsyncVaried object
 #' out <- AsyncVaried$new(req1, req2)
-#' out$request()
+#'
+#' # before you make requests, the methods return empty objects
 #' out$status()
 #' out$status_code()
 #' out$content()
 #' out$times()
 #' out$parse()
+#' out$responses()
+#'
+#' # make requests
+#' out$request()
+#'
+#' # access various parts
+#' ## http status objects
+#' out$status()
+#' ## status codes
+#' out$status_code()
+#' ## content (raw data)
+#' out$content()
+#' ## times
+#' out$times()
+#' ## parsed content
+#' out$parse()
+#' ## response objects
 #' out$responses()
 #'
 #' # pass in requests in a list via .list param
@@ -106,7 +144,7 @@ AsyncVaried <- R6::R6Class(
     },
 
     responses = function() {
-      private$output
+      private$output %||% list()
     },
 
     requests = function() {
@@ -170,7 +208,8 @@ AsyncVaried <- R6::R6Class(
           method = b$payload$method,
           url = z$url,
           status_code = z$status_code,
-          request_headers = c(useragent = b$payload$options$useragent, b$headers),
+          request_headers = c(useragent = b$payload$options$useragent,
+                              b$headers),
           response_headers = {
             if (grepl("^ftp://", z$url)) {
               list()

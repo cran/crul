@@ -2,42 +2,61 @@
 #'
 #' @export
 #' @template args
-#' @seealso \code{\link{post-requests}}, \code{\link{http-headers}},
-#' \code{\link{writing-options}}
+#' @seealso [post-requests], [delete-requests],
+#' [http-headers], [writing-options]
 #'
 #' @details This R6 class doesn't do actual HTTP requests as does
-#' \code{\link{HttpClient}} - but is for building requests
-#' to use for async HTTP requests in \code{\link{AsyncVaried}}
-#
+#' [HttpClient()] - it is for building requests to use for async HTTP
+#' requests in [AsyncVaried()]
 #'
-#' \strong{Methods}
+#' Note that you can access HTTP verbs after creating an `HttpRequest`
+#' object, just as you can with `HttpClient`. See examples for usage.
+#'
+#' Also note that when you call HTTP verbs on a `HttpRequest` object you
+#' don't need to assign the new object to a variable as the new details
+#' you've added are added to the object itself.
+#'
+#' **Methods**
 #'   \describe{
-#'     \item{\code{get(path, query, disk, stream, ...)}}{
+#'     \item{`get(path, query, disk, stream, ...)`}{
 #'       Define a GET request
 #'     }
-#'     \item{\code{post(path, query, body, disk, stream, ...)}}{
+#'     \item{`post(path, query, body, disk, stream, ...)`}{
 #'       Define a POST request
 #'     }
-#'     \item{\code{put(path, query, body, disk, stream, ...)}}{
+#'     \item{`put(path, query, body, disk, stream, ...)`}{
 #'       Define a PUT request
 #'     }
-#'     \item{\code{patch(path, query, body, disk, stream, ...)}}{
+#'     \item{`patch(path, query, body, disk, stream, ...)`}{
 #'       Define a PATCH request
 #'     }
-#'     \item{\code{delete(path, query, body, disk, stream, ...)}}{
+#'     \item{`delete(path, query, body, disk, stream, ...)`}{
 #'       Define a DELETE request
 #'     }
-#'     \item{\code{head(path, disk, stream, ...)}}{
+#'     \item{`head(path, disk, stream, ...)`}{
 #'       Define a HEAD request
+#'     }
+#'     \item{`method()`}{
+#'       Get the HTTP method (if defined)
+#'       - returns character string
 #'     }
 #'   }
 #'
-#' See \code{\link{HttpClient}} for information on parameters.
+#' See [HttpClient()] for information on parameters.
 #'
 #' @format NULL
 #' @usage NULL
 #'
 #' @examples
+#' x <- HttpRequest$new(url = "https://httpbin.org/get")
+#' ## note here how the HTTP method is shown on the first line to the right
+#' x$get()
+#'
+#' ## assign to a new object to keep the output
+#' z <- x$get()
+#' ### get the HTTP method
+#' z$method()
+#'
 #' (x <- HttpRequest$new(url = "https://httpbin.org/get")$get())
 #' x$url
 #' x$payload
@@ -62,7 +81,7 @@ HttpRequest <- R6::R6Class(
     payload = NULL,
 
     print = function(x, ...) {
-      cat("<crul http request> ", sep = "\n")
+      cat(paste0("<crul http request> ", self$method()), sep = "\n")
       cat(paste0("  url: ", if (is.null(self$url))
         self$handle$url else self$url), sep = "\n")
       cat("  curl options: ", sep = "\n")
@@ -123,18 +142,7 @@ HttpRequest <- R6::R6Class(
       curl_opts_check(...)
       url <- make_url_async(self$url, self$handle, path, query)
       opts <- prep_body(body, encode)
-      rr <- list(
-        url = url,
-        method = "post",
-        options = as.list(c(
-          opts$opts,
-          useragent = make_ua()
-        )),
-        headers = c(self$headers, opts$type),
-        fields = opts$fields
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      rr <- prep_opts("post", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       self$payload <- rr
@@ -142,26 +150,11 @@ HttpRequest <- R6::R6Class(
     },
 
     put = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                   stream = NULL, encode = NULL, ...) {
+                   stream = NULL, encode =  "multipart", ...) {
       curl_opts_check(...)
       url <- make_url_async(self$url, self$handle, path, query)
-      opts <- list(customrequest = "PUT")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "put",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("put", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       self$payload <- rr
@@ -169,26 +162,11 @@ HttpRequest <- R6::R6Class(
     },
 
     patch = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                     stream = NULL, encode = NULL, ...) {
+                     stream = NULL, encode =  "multipart", ...) {
       curl_opts_check(...)
       url <- make_url_async(self$url, self$handle, path, query)
-      opts <- list(customrequest = "PATCH")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "patch",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("patch", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       self$payload <- rr
@@ -196,26 +174,11 @@ HttpRequest <- R6::R6Class(
     },
 
     delete = function(path = NULL, query = list(), body = NULL, disk = NULL,
-                      stream = NULL, encode = NULL, ...) {
+                      stream = NULL, encode =  "multipart", ...) {
       curl_opts_check(...)
       url <- make_url_async(self$url, self$handle, path, query)
-      opts <- list(customrequest = "DELETE")
-      if (is.null(body)) {
-        opts$postfields <- raw(0)
-        opts$postfieldsize <- 0
-      }
-      rr <- list(
-        url = url,
-        method = "delete",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
-        headers = self$headers,
-        fields = body
-      )
-      rr$options <- utils::modifyList(rr$options,
-                                      c(self$opts, self$proxies, ...))
+      opts <- prep_body(body, encode)
+      rr <- prep_opts("delete", url, self, opts, ...)
       rr$disk <- disk
       rr$stream <- stream
       self$payload <- rr
@@ -241,7 +204,9 @@ HttpRequest <- R6::R6Class(
       rr$stream <- stream
       self$payload <- rr
       return(self)
-    }
+    },
+
+    method = function() self$payload$method
   )
 )
 
