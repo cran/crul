@@ -33,7 +33,7 @@
 #'     \item{`delete(path, query, body, disk, stream, ...)`}{
 #'       Define a DELETE request
 #'     }
-#'     \item{`head(path, disk, stream, ...)`}{
+#'     \item{`head(path, ...)`}{
 #'       Define a HEAD request
 #'     }
 #'     \item{`method()`}{
@@ -130,14 +130,8 @@ HttpRequest <- R6::R6Class(
       rr <- list(
         url = url,
         method = "get",
-        options = list(
-          httpget = TRUE,
-          useragent = make_ua()
-        ),
-        headers = list(
-          `User-Agent` = make_ua(),
-          `Accept-Encoding` = 'gzip, deflate'
-        )
+        options = ccp(list(httpget = TRUE, cainfo = find_cert_bundle())),
+        headers = def_head()
       )
       rr$headers <- norm_headers(rr$headers, self$headers)
       rr$options <- utils::modifyList(
@@ -196,23 +190,18 @@ HttpRequest <- R6::R6Class(
       return(self)
     },
 
-    head = function(path = NULL, disk = NULL, stream = NULL, ...) {
+    head = function(path = NULL, ...) {
       curl_opts_check(...)
       url <- make_url_async(self$url, self$handle, path, NULL)
       opts <- list(customrequest = "HEAD", nobody = TRUE)
       rr <- list(
         url = url,
         method = "head",
-        options = c(
-          opts,
-          useragent = make_ua()
-        ),
+        options = ccp(c(opts, cainfo = find_cert_bundle())),
         headers = self$headers
       )
       rr$options <- utils::modifyList(rr$options,
                                       c(self$opts, self$proxies, ...))
-      rr$disk <- disk
-      rr$stream <- stream
       self$payload <- rr
       return(self)
     },

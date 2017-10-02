@@ -177,27 +177,32 @@ $(document).ready(function () {
 #&gt;   [1] 7b 0a 20 20 22 61 72 67 73 22 3a 20 7b 7d 2c 20 0a 20 20 22 68 65 61
 #&gt;  [24] 64 65 72 73 22 3a 20 7b 0a 20 20 20 20 22 41 22 3a 20 22 68 65 6c 6c
 #&gt;  [47] 6f 20 77 6f 72 6c 64 22 2c 20 0a 20 20 20 20 22 41 63 63 65 70 74 22
-#&gt;  [70] 3a 20 22 2a 2f 2a 22 2c 20 0a 20 20 20 20 22 41 63 63 65 70 74 2d 45
-#&gt;  [93] 6e 63 6f 64 69 6e 67 22 3a 20 22 67 7a 69 70 2c 20 64 65 66 6c 61 74
-#&gt; [116] 65 22 2c 20 0a 20 20 20 20 22 43 6f 6e 6e 65 63 74 69 6f 6e 22 3a 20
-#&gt; [139] 22 63 6c 6f 73 65 22 2c 20 0a 20 20 20 20 22 48 6f 73 74 22 3a 20 22
-#&gt; [162] 68 74 74 70 62 69 6e 2e 6f 72 67 22 2c 20 0a 20 20 20 20 22 55 73 65
-#&gt; [185] 72 2d 41 67 65 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 35 31
-#&gt; [208] 2e 30 20 72 2d 63 75 72 6c 2f 32 2e 36 20 63 72 75 6c 2f 30 2e 33 2e
-#&gt; [231] 38 22 0a 20 20 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22 31
-#&gt; [254] 35 37 2e 31 33 30 2e 31 37 39 2e 38 36 22 2c 20 0a 20 20 22 75 72 6c
-#&gt; [277] 22 3a 20 22 68 74 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72 67
-#&gt; [300] 2f 67 65 74 22 0a 7d 0a</code></pre>
+#&gt;  [70] 3a 20 22 61 70 70 6c 69 63 61 74 69 6f 6e 2f 6a 73 6f 6e 2c 20 74 65
+#&gt;  [93] 78 74 2f 78 6d 6c 2c 20 61 70 70 6c 69 63 61 74 69 6f 6e 2f 78 6d 6c
+#&gt; [116] 2c 20 2a 2f 2a 22 2c 20 0a 20 20 20 20 22 41 63 63 65 70 74 2d 45 6e
+#&gt; [139] 63 6f 64 69 6e 67 22 3a 20 22 67 7a 69 70 2c 20 64 65 66 6c 61 74 65
+#&gt; [162] 22 2c 20 0a 20 20 20 20 22 43 6f 6e 6e 65 63 74 69 6f 6e 22 3a 20 22
+#&gt; [185] 63 6c 6f 73 65 22 2c 20 0a 20 20 20 20 22 48 6f 73 74 22 3a 20 22 68
+#&gt; [208] 74 74 70 62 69 6e 2e 6f 72 67 22 2c 20 0a 20 20 20 20 22 55 73 65 72
+#&gt; [231] 2d 41 67 65 6e 74 22 3a 20 22 6c 69 62 63 75 72 6c 2f 37 2e 35 34 2e
+#&gt; [254] 30 20 72 2d 63 75 72 6c 2f 32 2e 38 2e 31 20 63 72 75 6c 2f 30 2e 34
+#&gt; [277] 2e 30 22 0a 20 20 7d 2c 20 0a 20 20 22 6f 72 69 67 69 6e 22 3a 20 22
+#&gt; [300] 31 35 37 2e 31 33 30 2e 31 37 39 2e 38 36 22 2c 20 0a 20 20 22 75 72
+#&gt; [323] 6c 22 3a 20 22 68 74 74 70 73 3a 2f 2f 68 74 74 70 62 69 6e 2e 6f 72
+#&gt; [346] 67 2f 67 65 74 22 0a 7d 0a</code></pre>
 <p>HTTP method</p>
 <pre class="r"><code>res$method
 #&gt; [1] &quot;get&quot;</code></pre>
 <p>Request headers</p>
 <pre class="r"><code>res$request_headers
 #&gt; $`User-Agent`
-#&gt; [1] &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;
+#&gt; [1] &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;
 #&gt; 
 #&gt; $`Accept-Encoding`
 #&gt; [1] &quot;gzip, deflate&quot;
+#&gt; 
+#&gt; $Accept
+#&gt; [1] &quot;application/json, text/xml, application/xml, */*&quot;
 #&gt; 
 #&gt; $a
 #&gt; [1] &quot;hello world&quot;</code></pre>
@@ -213,7 +218,7 @@ $(document).ready(function () {
 #&gt; [1] &quot;meinheld/0.6.1&quot;
 #&gt; 
 #&gt; $date
-#&gt; [1] &quot;Tue, 13 Jun 2017 22:26:40 GMT&quot;
+#&gt; [1] &quot;Mon, 02 Oct 2017 19:21:12 GMT&quot;
 #&gt; 
 #&gt; $`content-type`
 #&gt; [1] &quot;application/json&quot;
@@ -228,16 +233,16 @@ $(document).ready(function () {
 #&gt; [1] &quot;Flask&quot;
 #&gt; 
 #&gt; $`x-processed-time`
-#&gt; [1] &quot;0.000635147094727&quot;
+#&gt; [1] &quot;0.000802993774414&quot;
 #&gt; 
 #&gt; $`content-length`
-#&gt; [1] &quot;307&quot;
+#&gt; [1] &quot;354&quot;
 #&gt; 
 #&gt; $via
 #&gt; [1] &quot;1.1 vegur&quot;</code></pre>
 <p>And you can parse the content with a provided function:</p>
 <pre class="r"><code>res$parse()
-#&gt; [1] &quot;{\n  \&quot;args\&quot;: {}, \n  \&quot;headers\&quot;: {\n    \&quot;A\&quot;: \&quot;hello world\&quot;, \n    \&quot;Accept\&quot;: \&quot;*/*\&quot;, \n    \&quot;Accept-Encoding\&quot;: \&quot;gzip, deflate\&quot;, \n    \&quot;Connection\&quot;: \&quot;close\&quot;, \n    \&quot;Host\&quot;: \&quot;httpbin.org\&quot;, \n    \&quot;User-Agent\&quot;: \&quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8\&quot;\n  }, \n  \&quot;origin\&quot;: \&quot;157.130.179.86\&quot;, \n  \&quot;url\&quot;: \&quot;https://httpbin.org/get\&quot;\n}\n&quot;
+#&gt; [1] &quot;{\n  \&quot;args\&quot;: {}, \n  \&quot;headers\&quot;: {\n    \&quot;A\&quot;: \&quot;hello world\&quot;, \n    \&quot;Accept\&quot;: \&quot;application/json, text/xml, application/xml, */*\&quot;, \n    \&quot;Accept-Encoding\&quot;: \&quot;gzip, deflate\&quot;, \n    \&quot;Connection\&quot;: \&quot;close\&quot;, \n    \&quot;Host\&quot;: \&quot;httpbin.org\&quot;, \n    \&quot;User-Agent\&quot;: \&quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0\&quot;\n  }, \n  \&quot;origin\&quot;: \&quot;157.130.179.86\&quot;, \n  \&quot;url\&quot;: \&quot;https://httpbin.org/get\&quot;\n}\n&quot;
 jsonlite::fromJSON(res$parse())
 #&gt; $args
 #&gt; named list()
@@ -247,7 +252,7 @@ jsonlite::fromJSON(res$parse())
 #&gt; [1] &quot;hello world&quot;
 #&gt; 
 #&gt; $headers$Accept
-#&gt; [1] &quot;*/*&quot;
+#&gt; [1] &quot;application/json, text/xml, application/xml, */*&quot;
 #&gt; 
 #&gt; $headers$`Accept-Encoding`
 #&gt; [1] &quot;gzip, deflate&quot;
@@ -259,7 +264,7 @@ jsonlite::fromJSON(res$parse())
 #&gt; [1] &quot;httpbin.org&quot;
 #&gt; 
 #&gt; $headers$`User-Agent`
-#&gt; [1] &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;
+#&gt; [1] &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;
 #&gt; 
 #&gt; 
 #&gt; $origin
@@ -280,7 +285,7 @@ f &lt;- tempfile()
 res &lt;- x$get(disk = f)
 # when using write to disk, content is a path
 res$content 
-#&gt; [1] &quot;/var/folders/gs/4khph0xs0436gmd2gdnwsg080000gn/T//RtmpF4Mh1B/file6fcc2a328add&quot;</code></pre>
+#&gt; [1] &quot;/var/folders/gs/4khph0xs0436gmd2gdnwsg080000gn/T//RtmpQrTvWo/file146142af607c4&quot;</code></pre>
 <p>Read lines</p>
 <pre class="r"><code>readLines(res$content, n = 10)
 #&gt;  [1] &quot;&lt;!DOCTYPE html&gt;&quot;                                                                           
@@ -304,11 +309,11 @@ res$content
 #&gt;   auth: 
 #&gt;   headers:
 res &lt;- x$get('stream/5', stream = function(x) cat(rawToChar(x)))
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;}, &quot;args&quot;: {}, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;id&quot;: 0}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;}, &quot;args&quot;: {}, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;id&quot;: 1}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;}, &quot;args&quot;: {}, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;id&quot;: 2}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;}, &quot;args&quot;: {}, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;id&quot;: 3}
-#&gt; {&quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;, &quot;headers&quot;: {&quot;Host&quot;: &quot;httpbin.org&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Accept&quot;: &quot;*/*&quot;, &quot;User-Agent&quot;: &quot;libcurl/7.51.0 r-curl/2.6 crul/0.3.8&quot;}, &quot;args&quot;: {}, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;id&quot;: 4}
+#&gt; {&quot;id&quot;: 0, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;args&quot;: {}, &quot;headers&quot;: {&quot;User-Agent&quot;: &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;, &quot;Accept&quot;: &quot;application/json, text/xml, application/xml, */*&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Host&quot;: &quot;httpbin.org&quot;}, &quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;}
+#&gt; {&quot;id&quot;: 1, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;args&quot;: {}, &quot;headers&quot;: {&quot;User-Agent&quot;: &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;, &quot;Accept&quot;: &quot;application/json, text/xml, application/xml, */*&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Host&quot;: &quot;httpbin.org&quot;}, &quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;}
+#&gt; {&quot;id&quot;: 2, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;args&quot;: {}, &quot;headers&quot;: {&quot;User-Agent&quot;: &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;, &quot;Accept&quot;: &quot;application/json, text/xml, application/xml, */*&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Host&quot;: &quot;httpbin.org&quot;}, &quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;}
+#&gt; {&quot;id&quot;: 3, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;args&quot;: {}, &quot;headers&quot;: {&quot;User-Agent&quot;: &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;, &quot;Accept&quot;: &quot;application/json, text/xml, application/xml, */*&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Host&quot;: &quot;httpbin.org&quot;}, &quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;}
+#&gt; {&quot;id&quot;: 4, &quot;origin&quot;: &quot;157.130.179.86&quot;, &quot;args&quot;: {}, &quot;headers&quot;: {&quot;User-Agent&quot;: &quot;libcurl/7.54.0 r-curl/2.8.1 crul/0.4.0&quot;, &quot;Accept&quot;: &quot;application/json, text/xml, application/xml, */*&quot;, &quot;Accept-Encoding&quot;: &quot;gzip, deflate&quot;, &quot;Connection&quot;: &quot;close&quot;, &quot;Host&quot;: &quot;httpbin.org&quot;}, &quot;url&quot;: &quot;https://httpbin.org/stream/5&quot;}
 # when streaming, content is NULL
 res$content 
 #&gt; NULL</code></pre>
