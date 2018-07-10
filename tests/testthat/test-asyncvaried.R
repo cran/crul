@@ -5,8 +5,8 @@ test_that("AsyncVaried works", {
 
   expect_is(AsyncVaried, "R6ClassGenerator")
 
-  req1 <- HttpRequest$new(url = "https://httpbin.org/get")$get()
-  req2 <- HttpRequest$new(url = "https://httpbin.org/post")$post()
+  req1 <- HttpRequest$new(url = hb("/get"))$get()
+  req2 <- HttpRequest$new(url = hb("/post"))$post()
 
   aa <- AsyncVaried$new(req1, req2)
 
@@ -41,9 +41,9 @@ context("AsyncVaried - order of results")
 test_that("AsyncVaried - order", {
   skip_on_cran()
 
-  req1 <- HttpRequest$new(url = "https://httpbin.org/get?a=5")$get()
-  req2 <- HttpRequest$new(url = "https://httpbin.org/get?b=6")$get()
-  req3 <- HttpRequest$new(url = "https://httpbin.org/get?c=7")$get()
+  req1 <- HttpRequest$new(url = hb("/get?a=5"))$get()
+  req2 <- HttpRequest$new(url = hb("/get?b=6"))$get()
+  req3 <- HttpRequest$new(url = hb("/get?c=7"))$get()
   aa <- AsyncVaried$new(req1, req2, req3)
   aa$request()
   out <- aa$responses()
@@ -65,9 +65,9 @@ test_that("AsyncVaried - writing to disk works", {
 
   f <- tempfile()
   g <- tempfile()
-  req1 <- HttpRequest$new(url = "https://httpbin.org/get")$get(disk = f)
-  req2 <- HttpRequest$new(url = "https://httpbin.org/post")$post(disk = g)
-  req3 <- HttpRequest$new(url = "https://httpbin.org/get")$get()
+  req1 <- HttpRequest$new(url = hb("/get"))$get(disk = f)
+  req2 <- HttpRequest$new(url = hb("/post"))$post(disk = g)
+  req3 <- HttpRequest$new(url = hb("/get"))$get()
   out <- AsyncVaried$new(req1, req2, req3)
   out$request()
   cont <- out$content()
@@ -101,9 +101,9 @@ test_that("AsyncVaried - streaming to disk works", {
 
   lst <- c()
   fun <- function(x) lst <<- c(lst, x)
-  req1 <- HttpRequest$new(url = "https://httpbin.org/get"
+  req1 <- HttpRequest$new(url = hb("/get")
   )$get(query = list(foo = "bar"), stream = fun)
-  req2 <- HttpRequest$new(url = "https://httpbin.org/get"
+  req2 <- HttpRequest$new(url = hb("/get")
   )$get(query = list(hello = "world"), stream = fun)
   out <- AsyncVaried$new(req1, req2)
   suppressWarnings(out$request())
@@ -115,5 +115,119 @@ test_that("AsyncVaried - streaming to disk works", {
 
   expect_is(lst, "raw")
   expect_is(rawToChar(lst), "character")
-  expect_match(rawToChar(lst), "application/json")
+})
+
+
+context("AsyncVaried - basic auth")
+test_that("AsyncVaried - basic auth works", {
+  skip_on_cran()
+
+  url <- hb("/basic-auth/user/passwd")
+  auth <- auth(user = "user", pwd = "passwd")
+  reqlist <- list(
+    HttpRequest$new(url = url, auth = auth)$get(),
+    HttpRequest$new(url = url, auth = auth)$get(query = list(a=5)),
+    HttpRequest$new(url = url, auth = auth)$get(query = list(b=3))
+  )
+  out <- AsyncVaried$new(.list = reqlist)
+  out$request()
+
+  expect_is(out, "AsyncVaried")
+
+  expect_equal(length(out$responses()), 3)
+
+  resps <- out$responses()
+  expect_is(resps[[1]]$request$auth, "auth")
+  expect_equal(resps[[1]]$request$auth$userpwd, "user:passwd")
+  expect_equal(resps[[1]]$request$auth$httpauth, 1)
+})
+
+
+
+context("AsyncVaried - failure behavior w/ bad URLs/etc.")
+test_that("AsyncVaried - failure behavior", {
+  skip_on_cran()
+
+  reqlist <- list(
+    HttpRequest$new(url = "http://stuffthings.gvb")$get(),
+    HttpRequest$new(url = base_url)$head(),
+    HttpRequest$new(url = base_url, opts = list(timeout_ms = 10))$head()
+  )
+  tmp <- AsyncVaried$new(.list = reqlist)
+  tmp$request()
+
+  expect_is(tmp, "AsyncVaried")
+  expect_equal(length(tmp$responses()), 3)
+
+  resps <- tmp$responses()
+  expect_equal(resps[[1]]$status_code, 0)
+  expect_equal(resps[[2]]$status_code, 200)
+  expect_equal(resps[[3]]$status_code, 0)
+
+  expect_false(resps[[1]]$success())
+  expect_true(resps[[2]]$success())
+  expect_false(resps[[3]]$success())
+
+  expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
+  expect_true(grepl("time", resps[[3]]$parse("UTF-8"), ignore.case = TRUE))
+})
+
+
+# disk and stream behave the same was as w/o either of them
+context("AsyncVaried - failure behavior w/ bad URLs/etc. - disk")
+test_that("AsyncVaried - failure behavior", {
+  skip_on_cran()
+
+  f <- tempfile()
+  g <- tempfile()
+  reqlist <- list(
+    HttpRequest$new(url = "http://stuffthings.gvb")$get(disk = f),
+    HttpRequest$new(url = base_url, opts = list(timeout_ms = 10))$get(disk = g)
+  )
+  tmp <- AsyncVaried$new(.list = reqlist)
+  tmp$request()
+
+  expect_is(tmp, "AsyncVaried")
+  expect_equal(length(tmp$responses()), 2)
+
+  resps <- tmp$responses()
+  expect_equal(resps[[1]]$status_code, 0)
+  expect_equal(resps[[2]]$status_code, 0)
+
+  expect_false(resps[[1]]$success())
+  expect_false(resps[[2]]$success())
+
+  expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
+  expect_true(grepl("time", resps[[2]]$parse("UTF-8"), ignore.case = TRUE))
+  
+  # cleanup
+  closeAllConnections()
+})
+
+# disk and stream behave the same was as w/o either of them
+context("AsyncVaried - failure behavior w/ bad URLs/etc. - stream")
+test_that("AsyncVaried - failure behavior", {
+  skip_on_cran()
+
+  lst <- c()
+  fun <- function(x) lst <<- c(lst, x)
+  reqlist <- list(
+    HttpRequest$new(url = "http://stuffthings.gvb")$get(stream = fun),
+    HttpRequest$new(url = base_url, opts = list(timeout_ms = 10))$get(stream = fun)
+  )
+  tmp <- AsyncVaried$new(.list = reqlist)
+  tmp$request()
+
+  expect_is(tmp, "AsyncVaried")
+  expect_equal(length(tmp$responses()), 2)
+
+  resps <- tmp$responses()
+  expect_equal(resps[[1]]$status_code, 0)
+  expect_equal(resps[[2]]$status_code, 0)
+
+  expect_false(resps[[1]]$success())
+  expect_false(resps[[2]]$success())
+
+  expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
+  expect_true(grepl("time", resps[[2]]$parse("UTF-8"), ignore.case = TRUE))
 })

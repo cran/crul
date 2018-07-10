@@ -34,7 +34,7 @@
 #'   }
 #' @format NULL
 #' @usage NULL
-#' @examples
+#' @examples \dontrun{
 #' x <- HttpResponse$new(method = "get", url = "https://httpbin.org")
 #' x$url
 #' x$method
@@ -53,11 +53,12 @@
 #'
 #' x <- HttpClient$new(url = 'https://httpbin.org/status/404')
 #' (res <- x$get())
-#'  \dontrun{res$raise_for_status()}
+#' # res$raise_for_status()
 #'
 #' x <- HttpClient$new(url = 'https://httpbin.org/status/414')
 #' (res <- x$get())
-#'  \dontrun{res$raise_for_status()}
+#' # res$raise_for_status()
+#' }
 HttpResponse <- R6::R6Class(
   'HttpResponse',
   public = list(
@@ -130,7 +131,7 @@ HttpResponse <- R6::R6Class(
     },
 
     success = function() {
-      self$status_code <= 201
+      self$status_code < 400L && self$status_code >= 200L
     },
 
     status_http = function(verbose = FALSE) {

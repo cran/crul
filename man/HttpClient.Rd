@@ -13,9 +13,16 @@
 \item{proxies}{an object of class \code{proxy}, as returned from the
 \code{\link{proxy}} function. Supports one proxy for now}
 
+\item{auth}{result of a call to the \code{\link{auth}} function, 
+e.g. \code{auth(user = "foo", pwd = "bar")}}
+
 \item{headers}{(list) a named list of headers}
 
 \item{handle}{A handle, see \code{\link{handle}}}
+
+\item{progress}{a function with logic for printing a progress
+bar for an HTTP request, ultimiately passed down to \pkg{curl}.
+only supports httr::progress() for now}
 }
 \description{
 HTTP client
@@ -74,15 +81,39 @@ it in the request headers is consistent.
 curl handles are re-used on the level of the connection object, that is,
 each \code{HttpClient} object is separate from one another so as to better
 separate connections.
+
+If you don't pass in a curl handle to the \code{handle} parameter,
+it gets created when a HTTP verb is called. Thus, if you try to get \code{handle}
+after creating a \code{HttpClient} object only passing \code{url} parameter, \code{handle}
+will be \code{NULL}. If you pass a curl handle to the \code{handle parameter, then you can get the handle from the}HttpClient\code{object. The response from a http verb request does have the handle in the}handle` slot.
 }
 
 \examples{
+\dontrun{
+# set your own handle 
+(h <- handle("https://httpbin.org"))
+(x <- HttpClient$new(handle = h))
+x$handle
+x$url
+(out <- x$get("get"))
+x$handle
+x$url
+class(out)
+out$handle
+
+# if you just pass a url, we create a handle for you
+#  this is how most people will use HttpClient
 (x <- HttpClient$new(url = "https://httpbin.org"))
 x$url
-(res_get1 <- x$get('get'))
-res_get1$content
-res_get1$response_headers
-res_get1$parse()
+x$handle # is empty, it gets created when a HTTP verb is called
+(r1 <- x$get('get'))
+x$url
+x$handle 
+r1$url
+r1$handle
+r1$content
+r1$response_headers
+r1$parse()
 
 (res_get2 <- x$get('get', query = list(hello = "world")))
 res_get2$parse()
@@ -111,6 +142,7 @@ x$post('post')
 ## if you url encode yourself, it gets double encoded, and that's bad
 (x <- HttpClient$new(url = "https://httpbin.org"))
 res <- x$get("get", query = list(a = 'hello world'))
+}
 }
 \seealso{
 \link{post-requests}, \link{delete-requests}, \link{http-headers},

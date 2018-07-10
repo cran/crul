@@ -48,6 +48,13 @@
 #' each `HttpClient` object is separate from one another so as to better
 #' separate connections.
 #' 
+#' If you don't pass in a curl handle to the `handle` parameter, 
+#' it gets created when a HTTP verb is called. Thus, if you try to get `handle`
+#' after creating a `HttpClient` object only passing `url` parameter, `handle` 
+#' will be `NULL`. If you pass a curl handle to the `handle parameter, then 
+#' you can get the handle from the `HttpClient` object. The response from a 
+#' http verb request does have the handle in the `handle` slot.
+#' 
 #' @note a little quark about `crul` is that because user agent string can 
 #' be passed as either a header or a curl option (both lead to a `User-Agent` 
 #' header being passed in the HTTP request), we return the user agent 
@@ -60,13 +67,31 @@
 #' @seealso [post-requests], [delete-requests], [http-headers],
 #' [writing-options], [cookies]
 #'
-#' @examples
+#' @examples \dontrun{
+#' # set your own handle 
+#' (h <- handle("https://httpbin.org"))
+#' (x <- HttpClient$new(handle = h))
+#' x$handle
+#' x$url
+#' (out <- x$get("get"))
+#' x$handle
+#' x$url
+#' class(out)
+#' out$handle
+#' 
+#' # if you just pass a url, we create a handle for you
+#' #  this is how most people will use HttpClient
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' x$url
-#' (res_get1 <- x$get('get'))
-#' res_get1$content
-#' res_get1$response_headers
-#' res_get1$parse()
+#' x$handle # is empty, it gets created when a HTTP verb is called
+#' (r1 <- x$get('get'))
+#' x$url
+#' x$handle 
+#' r1$url
+#' r1$handle
+#' r1$content
+#' r1$response_headers
+#' r1$parse()
 #'
 #' (res_get2 <- x$get('get', query = list(hello = "world")))
 #' res_get2$parse()
@@ -95,6 +120,7 @@
 #' ## if you url encode yourself, it gets double encoded, and that's bad
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' res <- x$get("get", query = list(a = 'hello world'))
+#' }
 
 HttpClient <- R6::R6Class(
   'HttpClient',
@@ -105,6 +131,7 @@ HttpClient <- R6::R6Class(
     auth = list(),
     headers = list(),
     handle = NULL,
+    progress = NULL,
 
     print = function(x, ...) {
       cat("<crul connection> ", sep = "\n")
@@ -129,22 +156,47 @@ HttpClient <- R6::R6Class(
         cat(sprintf("    %s: %s", names(self$headers)[i],
                     self$headers[[i]]), sep = "\n")
       }
+      cat(paste0("  progress: ", !is.null(self$progress)), sep = "\n")
       invisible(self)
     },
 
-    initialize = function(url, opts, proxies, auth, headers, handle) {
+    initialize = function(url, opts, proxies, auth, headers, handle, progress) {
       private$crul_h_pool <- new.env(hash = TRUE, parent = emptyenv())
       if (!missing(url)) self$url <- url
+
+      # curl options: check for set_opts first
+      if (!is.null(crul_opts$opts)) self$opts <- crul_opts$opts
       if (!missing(opts)) self$opts <- opts
+      
+      # proxy: check for set_proxy first
+      if (!is.null(crul_opts$proxies)) self$proxies <- crul_opts$proxies
       if (!missing(proxies)) {
         if (!inherits(proxies, "proxy")) {
           stop("proxies input must be of class proxy", call. = FALSE)
         }
         self$proxies <- proxies
       }
+
+      # auth: check for set_auth first
+      if (!is.null(crul_opts$auth)) self$auth <- crul_opts$auth
       if (!missing(auth)) self$auth <- auth
+
+      # progress
+      if (!missing(progress)) {
+        assert(progress, "request")
+        self$progress <- progress$options
+      }
+
+      # headers: check for set_headers first
+      if (!is.null(crul_opts$headers)) self$headers <- crul_opts$headers
       if (!missing(headers)) self$headers <- headers
-      if (!missing(handle)) self$handle <- handle
+
+      if (!missing(handle)) {
+        assert(handle, "list")
+        stopifnot(all(c("url", "handle") %in% names(handle)))
+        self$handle <- handle
+      }
+
       if (is.null(self$url) && is.null(self$handle)) {
         stop("need one of url or handle", call. = FALSE)
       }
@@ -165,7 +217,7 @@ HttpClient <- R6::R6Class(
         rr$options$useragent <- make_ua()
       }
       rr$options <- utils::modifyList(
-        rr$options, c(self$opts, self$proxies, self$auth, ...))
+        rr$options, c(self$opts, self$proxies, self$auth, self$progress, ...))
       rr$options <- curl_opts_fil(rr$options)
       rr$disk <- disk
       rr$stream <- stream
