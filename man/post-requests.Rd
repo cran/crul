@@ -22,17 +22,20 @@ x$post('post')
 
 ## form requests
 (cli <- HttpClient$new(
-  url = "http://apps.kew.org/wcsp/advsearch.do"
+  url = "https://httpbin.org/post",
+  opts = list(verbose = TRUE)
 ))
-cli$post(
+res <- cli$post(
   encode = "form",
   body = list(
-    page = 'advancedSearch',
-    genus = 'Gagea',
-    species = 'pratensis',
-    selectedLevel = 'cont'
+    custname = 'Jane',
+    custtel = '444-4444',
+    size = 'small',
+    topping = 'bacon',
+    comments = 'make it snappy'
   )
 )
+jsonlite::fromJSON(res$parse("UTF-8"))
 
 (x <- HttpClient$new(url = "https://httpbin.org"))
 res <- x$post("post",

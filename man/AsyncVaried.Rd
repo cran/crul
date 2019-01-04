@@ -10,8 +10,8 @@ must supply inputs to one of these parameters, but not both}
 }
 \value{
 An object of class \code{AsyncVaried} with variables and methods.
-Responses are returned in the order they are passed in. We print the
-first 10.
+\link{HttpResponse} objects are returned in the order they are passed in.
+We print the first 10.
 }
 \description{
 Async client for different request types
@@ -62,31 +62,33 @@ requests made
 }
 \section{Failure behavior}{
 
-HTTP requests mostly fail in ways that you are probably familiar with, 
-including when there's a 400 response (the URL not found), and when the 
-server made a mistake (a 500 series HTTP status code). 
+HTTP requests mostly fail in ways that you are probably familiar with,
+including when there's a 400 response (the URL not found), and when the
+server made a mistake (a 500 series HTTP status code).
 
-But requests can fail sometimes where there is no HTTP status code, and 
-no agreed upon way to handle it other than to just fail immediately. 
+But requests can fail sometimes where there is no HTTP status code, and
+no agreed upon way to handle it other than to just fail immediately.
 
-When a request fails when using synchronous requests (see [HttpClient]) 
-you get an error message that stops your code progression 
+When a request fails when using synchronous requests (see \link{HttpClient})
+you get an error message that stops your code progression
 immediately saying for example:
-
-- "Could not resolve host: https://foo.com"
-- "Failed to connect to foo.com"
-- "Resolving timed out after 10 milliseconds"
+\itemize{
+\item "Could not resolve host: https://foo.com"
+\item "Failed to connect to foo.com"
+\item "Resolving timed out after 10 milliseconds"
+}
 
 However, for async requests we don't want to fail immediately because
-that would stop the subsequent requests from occurring. Thus, when 
-we find that a request fails for one of the reasons above we 
-give back a [HttpResponse] object just like any other response, and:
-
-- capture the error message and put it in the `content` slot of the 
-response object (thus calls to `content` and `parse()` work correctly)
-- give back a `0` HTTP status code. we handle this specially when testing 
-whether the request was successful or not with e.g., the `success()` 
+that would stop the subsequent requests from occurring. Thus, when
+we find that a request fails for one of the reasons above we
+give back a \link{HttpResponse} object just like any other response, and:
+\itemize{
+\item capture the error message and put it in the \code{content} slot of the
+response object (thus calls to \code{content} and \code{parse()} work correctly)
+\item give back a \code{0} HTTP status code. we handle this specially when testing
+whether the request was successful or not with e.g., the \code{success()}
 method
+}
 }
 
 \examples{
@@ -125,6 +127,19 @@ out$times()
 ## parsed content
 out$parse()
 ## response objects
+out$responses()
+
+# use $verb() method to select http verb
+method <- "post"
+req1 <- HttpRequest$new(
+  url = "https://httpbin.org/post",
+  opts = list(verbose = TRUE),
+  headers = list(foo = "bar")
+)$verb(method)
+req2 <- HttpRequest$new(url = "https://httpbin.org/post")$verb(method)
+out <- AsyncVaried$new(req1, req2)
+out
+out$request()
 out$responses()
 
 # pass in requests in a list via .list param
@@ -173,9 +188,22 @@ reqlist <- list(
 tmp$request()
 tmp$responses()
 tmp$parse("UTF-8")
+
+# access intemediate redirect headers
+dois <- c("10.7202/1045307ar", "10.1242/jeb.088898", "10.1121/1.3383963")
+reqlist <- list(
+  HttpRequest$new(url = paste0("https://doi.org/", dois[1]))$get(),
+  HttpRequest$new(url = paste0("https://doi.org/", dois[2]))$get(),
+  HttpRequest$new(url = paste0("https://doi.org/", dois[3]))$get()
+)
+tmp <- AsyncVaried$new(.list = reqlist)
+tmp$request()
+tmp
+lapply(tmp$responses(), "[[", "response_headers_all")
 }
 }
 \seealso{
 Other async: \code{\link{Async}}
 }
+\concept{async}
 \keyword{datasets}

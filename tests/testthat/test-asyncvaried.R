@@ -28,6 +28,12 @@ test_that("AsyncVaried works", {
   expect_equal(length(aa$status()), 2)
   expect_equal(length(aa$status_code()), 2)
   expect_equal(length(aa$times()), 2)
+
+  # response_headers and response_headers_all 
+  expect_is(aa$responses()[[1]]$response_headers, "list")
+  expect_named(aa$responses()[[1]]$response_headers)
+  expect_is(aa$responses()[[1]]$response_headers_all, "list")
+  expect_named(aa$responses()[[1]]$response_headers_all, NULL)
 })
 
 test_that("AsyncVaried fails well", {
@@ -230,4 +236,17 @@ test_that("AsyncVaried - failure behavior", {
 
   expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
   expect_true(grepl("time", resps[[2]]$parse("UTF-8"), ignore.case = TRUE))
+})
+
+# verb method works
+test_that("AsyncVaried verb method works", {
+  skip_on_cran()
+
+  req1 <- HttpRequest$new(url = hb("/get"))$verb('get')
+  req2 <- HttpRequest$new(url = hb("/post"))$verb('post')
+
+  aa <- AsyncVaried$new(req1, req2)
+  aa$request()
+  expect_equal(aa$responses()[[1]]$method, 'get')
+  expect_equal(aa$responses()[[2]]$method, 'post')
 })

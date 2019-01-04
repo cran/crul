@@ -21,6 +21,26 @@ test_that("HttpClient fails well", {
   expect_error(HttpClient$new(), "need one of url or handle")
 })
 
+test_that("HttpClient print method", {
+  skip_on_cran()
+
+  aa <- HttpClient$new(url = hb(), 
+    opts = list(verbose = TRUE),
+    headers = list(foo = "bar"),
+    auth = auth(user = "foo", pwd = "bar", auth = "basic"),
+    proxies = proxy("http://97.77.104.22:3128")
+  )
+
+  expect_is(aa$print, "function")
+  expect_output(aa$print(), "crul connection")
+  expect_output(aa$print(), "verbose: TRUE")
+  expect_output(aa$print(), "auth: FALSE")
+  expect_output(aa$print(), "- foo:bar")
+  expect_output(aa$print(), "type:  1")
+  expect_output(aa$print(), "foo: bar")
+  expect_output(aa$print(), "progress: FALSE")
+})
+
 
 context("HttpClient - disk")
 test_that("HttpClient works", {
@@ -65,4 +85,14 @@ test_that("HttpClient disk fails well", {
 
   aa <- HttpClient$new(url = hb())
   expect_error(aa$get("get", stream = 5), "could not find function \"fun\"")
+})
+
+
+context("HttpClient - failure behavior")
+test_that("HttpClient - failure behavior", {
+  skip_on_cran()
+
+  # url doesn't exist - could not resolve host
+  conn <- HttpClient$new("http://stuffthings.gvb")
+  expect_error(conn$get(), "resolve host")
 })

@@ -13,7 +13,7 @@
 \item{proxies}{an object of class \code{proxy}, as returned from the
 \code{\link{proxy}} function. Supports one proxy for now}
 
-\item{auth}{result of a call to the \code{\link{auth}} function, 
+\item{auth}{result of a call to the \code{\link{auth}} function,
 e.g. \code{auth(user = "foo", pwd = "bar")}}
 
 \item{headers}{(list) a named list of headers}
@@ -59,6 +59,10 @@ Define a DELETE request
 \item{\code{head(path, ...)}}{
 Define a HEAD request
 }
+\item{\code{verb(verb, ...)}}{
+Use an arbitrary HTTP verb supported on this class
+Supported verbs: get, post, put, patch, delete, head
+}
 \item{\code{method()}}{
 Get the HTTP method (if defined)
 - returns character string
@@ -91,6 +95,11 @@ HttpRequest$new(
     `Content-Type` = "application/json"
   )
 )
+
+# verb: get any http method
+z <- HttpRequest$new(url = "https://httpbin.org/get")
+res <- z$verb('get', query = list(hello = "world"))
+res$payload
 }
 }
 \seealso{

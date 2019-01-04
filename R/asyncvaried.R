@@ -6,8 +6,8 @@
 #' @family async
 #' @template async-deets
 #' @return An object of class `AsyncVaried` with variables and methods.
-#' Responses are returned in the order they are passed in. We print the 
-#' first 10.
+#' [HttpResponse] objects are returned in the order they are passed in. 
+#' We print the first 10.
 #' @details
 #' **Methods**
 #'   \describe{
@@ -90,6 +90,19 @@
 #' out$parse()
 #' ## response objects
 #' out$responses()
+#' 
+#' # use $verb() method to select http verb
+#' method <- "post"
+#' req1 <- HttpRequest$new(
+#'   url = "https://httpbin.org/post",
+#'   opts = list(verbose = TRUE),
+#'   headers = list(foo = "bar")
+#' )$verb(method)
+#' req2 <- HttpRequest$new(url = "https://httpbin.org/post")$verb(method)
+#' out <- AsyncVaried$new(req1, req2)
+#' out
+#' out$request()
+#' out$responses()
 #'
 #' # pass in requests in a list via .list param
 #' reqlist <- list(
@@ -137,6 +150,18 @@
 #' tmp$request()
 #' tmp$responses()
 #' tmp$parse("UTF-8")
+#' 
+#' # access intemediate redirect headers
+#' dois <- c("10.7202/1045307ar", "10.1242/jeb.088898", "10.1121/1.3383963")
+#' reqlist <- list(
+#'   HttpRequest$new(url = paste0("https://doi.org/", dois[1]))$get(),
+#'   HttpRequest$new(url = paste0("https://doi.org/", dois[2]))$get(),
+#'   HttpRequest$new(url = paste0("https://doi.org/", dois[3]))$get()
+#' )
+#' tmp <- AsyncVaried$new(.list = reqlist)
+#' tmp$request()
+#' tmp
+#' lapply(tmp$responses(), "[[", "response_headers_all")
 #' }
 AsyncVaried <- R6::R6Class(
   'AsyncVaried',
@@ -236,8 +261,14 @@ AsyncVaried <- R6::R6Class(
             ff <- file(w$disk, open = "wb")
             curl::multi_add(
               handle = h,
-              done = function(res) multi_res[[i]] <<- res,
-              fail = function(res) multi_res[[i]] <<- make_async_error(res, w),
+              done = function(res) {
+                close(ff)
+                multi_res[[i]] <<- res
+              },
+              fail = function(res) {
+                close(ff)
+                multi_res[[i]] <<- make_async_error(res, w)
+              },
               data = ff,
               pool = crulpool
             )
@@ -263,24 +294,27 @@ AsyncVaried <- R6::R6Class(
       multi_res <- ccp(multi_res)
 
       Map(function(z, b) {
+        # prep headers
+        if (grepl("^ftp://", z$url)) {
+          headers <- list()
+        } else {
+          hh <- rawToChar(z$headers %||% raw(0))
+          if (nzchar(hh)) {
+            headers <- lapply(curl::parse_headers(hh, multiple = TRUE), headers_parse)
+          } else {
+            headers <- list()
+          }
+        }
         HttpResponse$new(
           method = b$payload$method,
           url = z$url,
           status_code = z$status_code,
-          request_headers = c(useragent = b$payload$options$useragent,
-                              b$headers),
-          response_headers = {
-            if (grepl("^ftp://", z$url)) {
-              list()
-            } else {
-              head_char <- rawToChar(z$headers)
-              if (nzchar(head_char)) {
-                headers_parse(curl::parse_headers(head_char))
-              } else {
-                list()
-              }
-            }
-          },
+          request_headers = c(
+            useragent = b$payload$options$useragent,
+            b$headers
+          ),
+          response_headers = last(headers),
+          response_headers_all = headers,
           modified = z$modified,
           times = z$times,
           content = z$content,

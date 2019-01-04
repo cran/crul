@@ -23,24 +23,67 @@
 #'     \item{`head(path, query, ...)`}{
 #'       Make a HEAD request
 #'     }
+#'     \item{`verb(verb, ...)`}{
+#'       Use an arbitrary HTTP verb supported on this class
+#'       Supported verbs: get, post, put, patch, delete, head. Also supports 
+#'       retry
+#'     }
+#'     \item{`retry(verb, ..., pause_base = 1, pause_cap = 60, pause_min = 1, times = 3,
+#'                  terminate_on, retry_only_on, onwait)`}{
+#'       Retries the request given by `verb` until successful (HTTP response
+#'       status < 400), or a condition for giving up is met. Automatically
+#'       recognizes `Retry-After` and `X-RateLimit-Reset` headers in the
+#'       response for rate-limited remote APIs.
+#'     }
+#'     \item{`handle_pop()`}{
+#'       reset your curl handle
+#'     }
+#'     \item{`url_fetch(path, query)`}{
+#'       get the URL that would be sent (i.e., before executing the request).
+#'       the only things that change the URL are path and query
+#'       parameters; body and any curl options don't change the URL
+#'       - returns: URL as a character vector
+#'     }
 #'   }
 #'
 #' @format NULL
 #' @usage NULL
+#' @return an [HttpResponse] object
 #' @details Possible parameters (not all are allowed in each HTTP verb):
 #' \itemize{
-#'  \item path - URL path, appended to the base URL
-#'  \item query - query terms, as a named list
-#'  \item body - body as an R list
-#'  \item encode - one of form, multipart, json, or raw
-#'  \item disk - a path to write to. if NULL (default), memory used.
+#'  \item `path` - URL path, appended to the base URL
+#'  \item `query` - query terms, as a named list
+#'  \item `body` - body as an R list
+#'  \item `encode` - one of form, multipart, json, or raw
+#'  \item `disk` - a path to write to. if NULL (default), memory used.
 #'  See [curl::curl_fetch_disk()] for help.
-#'  \item stream - an R function to determine how to stream data. if
+#'  \item `stream` - an R function to determine how to stream data. if
 #'  NULL (default), memory used. See [curl::curl_fetch_stream()]
 #'  for help
-#'  \item ... curl options, only those in the acceptable set from
-#'  [curl::curl_options()] except the following: httpget, httppost,
-#'  post, postfields, postfieldsize, and customrequest
+#'  \item `verb` - an HTTP verb supported on this class: get, post, put, 
+#'  patch, delete, head. Also supports retry.
+#'  \item `...` - For `retry`, the options to be passed on to the method
+#'  implementing the requested verb, including curl options. Otherwise,
+#'  curl options, only those in the acceptable set from [curl::curl_options()]
+#'  except the following: httpget, httppost, post, postfields, postfieldsize,
+#'  and customrequest
+#'  \item `pause_base,pause_cap,pause_min` - basis, maximum, and minimum for
+#'  calculating wait time for retry. Wait time is calculated according to the
+#'  exponential backoff with full jitter algorithm. Specifically, wait time is
+#'  chosen randomly between `pause_min` and the lesser of `pause_base * 2` and
+#'  `pause_cap`, with `pause_base` doubling on each subsequent retry attempt.
+#'  Use `pause_cap = Inf` to not terminate retrying due to cap of wait time
+#'  reached.
+#'  \item `times` - the maximum number of times to retry. Set to `Inf` to
+#'  not stop retrying due to exhausting the number of attempts.
+#'  \item `terminate_on,retry_only_on` - a vector of HTTP status codes. For
+#'  `terminate_on`, the status codes for which to terminate retrying, and for
+#'  `retry_only_on`, the status codes for which to retry the request.
+#'  \item `onwait` - a callback function if the request will be retried and
+#'  a wait time is being applied. The function will be passed two parameters,
+#'  the response object from the failed request, and the wait time in seconds.
+#'  Note that the time spent in the function effectively adds to the wait time,
+#'  so it should be kept simple.
 #' }
 #'
 #' @section handles:
@@ -54,8 +97,8 @@
 #' will be `NULL`. If you pass a curl handle to the `handle parameter, then 
 #' you can get the handle from the `HttpClient` object. The response from a 
 #' http verb request does have the handle in the `handle` slot.
-#' 
-#' @note a little quark about `crul` is that because user agent string can 
+#'
+#' @note A little quirk about `crul` is that because user agent string can
 #' be passed as either a header or a curl option (both lead to a `User-Agent` 
 #' header being passed in the HTTP request), we return the user agent 
 #' string in the `request_headers` list of the response even if you 
@@ -78,6 +121,9 @@
 #' x$url
 #' class(out)
 #' out$handle
+#' out$request_headers
+#' out$response_headers
+#' out$response_headers_all
 #' 
 #' # if you just pass a url, we create a handle for you
 #' #  this is how most people will use HttpClient
@@ -115,11 +161,39 @@
 #'
 #' # head request
 #' (res_head <- x$head())
+#' 
+#' # arbitrary verb
+#' (x <- HttpClient$new(url = "https://httpbin.org"))
+#' x$verb('get')
+#' x$verb('GET')
+#' x$verb('GET', query = list(foo = "bar"))
+#' x$verb('retry', 'GET', path = "status/400")
+#'
+#' # retry, by default at most 3 times
+#' (res_get <- x$retry("GET", path = "status/400"))
+#'
+#' # retry, but not for 404 NOT FOUND
+#' (res_get <- x$retry("GET", path = "status/404", terminate_on = c(404)))
+#'
+#' # retry, but only for exceeding rate limit (note that e.g. Github uses 403)
+#' (res_get <- x$retry("GET", path = "status/429", retry_only_on = c(403, 429)))
 #'
 #' # query params are URL encoded for you, so DO NOT do it yourself
 #' ## if you url encode yourself, it gets double encoded, and that's bad
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' res <- x$get("get", query = list(a = 'hello world'))
+#' 
+#' # get full url before the request is made
+#' (x <- HttpClient$new(url = "https://httpbin.org"))
+#' x$url_fetch()
+#' x$url_fetch('get')
+#' x$url_fetch('post')
+#' x$url_fetch('get', query = list(foo = "bar"))
+#' 
+#' # access intermediate headers in response_headers_all
+#' x <- HttpClient$new("https://doi.org/10.1007/978-3-642-40455-9_52-1")
+#' bb <- x$get()
+#' bb$response_headers_all
 #' }
 
 HttpClient <- R6::R6Class(
@@ -288,11 +362,67 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    verb = function(verb, ...) {
+      stopifnot(is.character(verb), length(verb) > 0)
+      verbs <- c('get', 'post', 'put', 'patch', 'delete', 'head', 'retry')
+      if (!tolower(verb) %in% verbs) stop("'verb' must be one of: ", paste0(verbs, collapse = ", "))
+      verbFunc <- self[[tolower(verb)]]
+      stopifnot(is.function(verbFunc))
+      verbFunc(...)
+    },
+
+    retry = function(verb, ...,
+                     pause_base = 1, pause_cap = 60, pause_min = 1, times = 3,
+                     terminate_on = NULL, retry_only_on = NULL,
+                     onwait = NULL) {
+      stopifnot(is.character(verb), length(verb) > 0)
+      stopifnot(is.null(onwait) || is.function(onwait))
+      verbFunc <- self[[tolower(verb)]]
+      stopifnot(is.function(verbFunc))
+      resp <- verbFunc(...)
+      if ((resp$status_code >= 400) &&
+          (! resp$status_code %in% terminate_on) &&
+          (is.null(retry_only_on) || resp$status_code %in% retry_only_on) &&
+          (times > 0) &&
+          (pause_base < pause_cap)) {
+        rh <- resp$response_headers
+        if (! is.null(rh[["retry-after"]])) {
+          waitTime <- as.numeric(rh[["retry-after"]])
+        } else if (identical(rh[["x-ratelimit-remaining"]], "0") &&
+                   ! is.null(rh[["x-ratelimit-reset"]])) {
+          waitTime <- max(0, as.numeric(rh[["x-ratelimit-reset"]]) - as.numeric(Sys.time()))
+        } else {
+          if (is.null(pause_min)) pause_min <- pause_base
+          # exponential backoff with full jitter
+          waitTime <- stats::runif(1,
+                                   min = pause_min,
+                                   max = min(pause_base * 2, pause_cap))
+        }
+        if (! (waitTime > pause_cap)) {
+          if (is.function(onwait)) onwait(resp, waitTime)
+          Sys.sleep(waitTime)
+          resp <- self$retry(verb = verb, ...,
+                             pause_base = pause_base * 2,
+                             pause_cap = pause_cap,
+                             pause_min = pause_min,
+                             times = times - 1,
+                             terminate_on = terminate_on,
+                             retry_only_on = retry_only_on,
+                             onwait = onwait)
+        }
+      }
+      resp
+    },
+
     handle_pop = function() {
       name <- handle_make(self$url)
       if (exists(name, envir = private$crul_h_pool)) {
         rm(list = name, envir = private$crul_h_pool)
       }
+    },
+
+    url_fetch = function(path = NULL, query = list()) {
+      private$make_url(self$url, path = path, query = query)$url
     }
   ),
 
@@ -346,24 +476,27 @@ HttpClient <- R6::R6Class(
         resp <- crul_fetch(opts)
       }
 
+      # prep headers
+      if (grepl("^ftp://", resp$url)) {
+        headers <- list()
+      } else {
+        hh <- rawToChar(resp$headers %||% raw(0))
+        if (is.null(hh) || nchar(hh) == 0) {
+          headers <- list()
+        } else {
+          headers <- lapply(curl::parse_headers(hh, multiple = TRUE), 
+            headers_parse)
+        }
+      }
       # build response
       HttpResponse$new(
         method = opts$method,
         url = resp$url,
         status_code = resp$status_code,
-        request_headers = c('User-Agent' = opts$options$useragent, opts$headers),
-        response_headers = {
-          if (grepl("^ftp://", resp$url)) {
-            list()
-          } else {
-            hh <- rawToChar(resp$headers %||% raw(0))
-            if (is.null(hh) || nchar(hh) == 0) {
-              list()
-            } else {
-              headers_parse(curl::parse_headers(hh))
-            }
-          }
-        },
+        request_headers = 
+        c('User-Agent' = opts$options$useragent, opts$headers),
+        response_headers = last(headers),
+        response_headers_all = headers,
         modified = resp$modified,
         times = resp$times,
         content = resp$content,

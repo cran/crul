@@ -35,6 +35,24 @@ test_that("Async fails well", {
   expect_error(Async$new(), "\"urls\" is missing, with no default")
 })
 
+test_that("Async print method", {
+  skip_on_cran()
+  
+  aa <- Async$new(urls = c(hb('/get'), 'https://google.com'))
+
+  expect_is(aa, "Async")
+  expect_is(aa$print, "function")
+  expect_output(aa$print(), "crul async connection")
+  expect_output(aa$print(), "urls:")
+  expect_output(aa$print(), hb('/get'))
+  expect_output(aa$print(), 'https://google.com')
+
+  # > 10 urls
+  aa <- Async$new(urls = rep(hb('/get'), 12))
+
+  expect_output(aa$print(), "# ... with")
+  expect_output(aa$print(), hb('/get'))
+})
 
 
 context("Async - get")
@@ -130,6 +148,21 @@ test_that("Async - head", {
   expect_equal(out[[2]]$method, "head")
 })
 
+context("Async - verb")
+test_that("Async - verb", {
+  skip_on_cran()
+
+  aa <- Async$new(urls = c('https://google.com',
+                           'https://nytimes.com'))
+  out <- aa$verb('get')
+
+  expect_is(out, "list")
+  expect_is(out[[1]], "HttpResponse")
+  expect_is(out[[2]], "HttpResponse")
+  expect_equal(out[[1]]$method, "get")
+  expect_equal(out[[2]]$method, "get")
+})
+
 
 context("Async - order of results")
 test_that("Async - order", {
@@ -150,7 +183,7 @@ test_that("Async - order", {
   expect_match(out[[3]]$url, "c=7")
 })
 
-context("Async - disk")
+context("Async - disk w/ GET")
 test_that("Async - writing to disk works", {
   skip_on_cran()
 
@@ -174,6 +207,86 @@ test_that("Async - writing to disk works", {
   expect_is(res[[1]], "HttpResponse")
   expect_is(out, "list")
   expect_is(out[[1]], "character")
+})
+
+context("Async - disk w/ POST")
+test_that("Async - writing to disk works", {
+  skip_on_cran()
+
+  post_url <- hb('/post')
+  cc <- Async$new(urls = rep(post_url, 5))
+  files <- replicate(5, tempfile())
+  res <- cc$post(disk = files, body = list(a = 6))
+  out <- lapply(files, readLines)
+
+  # cleanup
+  closeAllConnections()
+
+  expect_is(res, "list")
+  expect_is(res[[1]], "HttpResponse")
+  expect_is(out, "list")
+  expect_is(out[[1]], "character")
+  expect_named(jsonlite::fromJSON(out[[1]])$form, "a")
+})
+
+context("Async - disk w/ PUT")
+test_that("Async - writing to disk works", {
+  skip_on_cran()
+
+  put_url <- hb('/put')
+  cc <- Async$new(urls = rep(put_url, 5))
+  files <- replicate(5, tempfile())
+  res <- cc$put(disk = files, body = list(a = 6))
+  out <- lapply(files, readLines)
+
+  # cleanup
+  closeAllConnections()
+
+  expect_is(res, "list")
+  expect_is(res[[1]], "HttpResponse")
+  expect_is(out, "list")
+  expect_is(out[[1]], "character")
+  expect_named(jsonlite::fromJSON(out[[1]])$form, "a")
+})
+
+context("Async - disk w/ PATCH")
+test_that("Async - writing to disk works", {
+  skip_on_cran()
+
+  patch_url <- hb('/patch')
+  cc <- Async$new(urls = rep(patch_url, 5))
+  files <- replicate(5, tempfile())
+  res <- cc$patch(disk = files, body = list(a = 6))
+  out <- lapply(files, readLines)
+
+  # cleanup
+  closeAllConnections()
+
+  expect_is(res, "list")
+  expect_is(res[[1]], "HttpResponse")
+  expect_is(out, "list")
+  expect_is(out[[1]], "character")
+  expect_named(jsonlite::fromJSON(out[[1]])$form, "a")
+})
+
+context("Async - disk w/ DELETE")
+test_that("Async - writing to disk works", {
+  skip_on_cran()
+
+  delete_url <- hb('/delete')
+  cc <- Async$new(urls = rep(delete_url, 5))
+  files <- replicate(5, tempfile())
+  res <- cc$delete(disk = files, body = list(a = 6))
+  out <- lapply(files, readLines)
+
+  # cleanup
+  closeAllConnections()
+
+  expect_is(res, "list")
+  expect_is(res[[1]], "HttpResponse")
+  expect_is(out, "list")
+  expect_is(out[[1]], "character")
+  expect_named(jsonlite::fromJSON(out[[1]])$form, "a")
 })
 
 context("Async - stream")
@@ -315,4 +428,5 @@ test_that("Async - failure behavior", {
 
   closeAllConnections()
 })
+
 
