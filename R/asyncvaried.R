@@ -164,7 +164,7 @@
 #' lapply(tmp$responses(), "[[", "response_headers_all")
 #' }
 AsyncVaried <- R6::R6Class(
-  'AsyncVaried',
+  "AsyncVaried",
   public = list(
     print = function(x, ...) {
       cat("<crul async varied connection> ", sep = "\n")
@@ -176,7 +176,8 @@ AsyncVaried <- R6::R6Class(
                     print_urls[[i]]$url), "\n")
       }
       if (length(private$reqs) > 10) {
-        cat(sprintf("   # ... with %s more", length(private$reqs) - 10), sep = "\n")
+        cat(sprintf("   # ... with %s more", length(private$reqs) - 10),
+          sep = "\n")
       }
       invisible(self)
     },
@@ -274,11 +275,13 @@ AsyncVaried <- R6::R6Class(
             )
           } else if (is.null(w$disk) && !is.null(w$stream)) {
             stopifnot(is.function(w$stream))
+            # assign empty response since stream is a user supplied function
+            # to write somewhere of their choosing
+            multi_res[[i]] <<- make_async_error("", w)
             curl::multi_add(
               handle = h,
-              done = function(res) multi_res[[i]] <<- res,
+              done = w$stream,
               fail = function(res) multi_res[[i]] <<- make_async_error(res, w),
-              data = w$stream,
               pool = crulpool
             )
           }
@@ -300,7 +303,8 @@ AsyncVaried <- R6::R6Class(
         } else {
           hh <- rawToChar(z$headers %||% raw(0))
           if (nzchar(hh)) {
-            headers <- lapply(curl::parse_headers(hh, multiple = TRUE), headers_parse)
+            headers <- lapply(curl::parse_headers(hh, multiple = TRUE),
+              headers_parse)
           } else {
             headers <- list()
           }

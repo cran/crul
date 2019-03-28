@@ -43,6 +43,10 @@ test_that("Async print method", {
   expect_is(aa, "Async")
   expect_is(aa$print, "function")
   expect_output(aa$print(), "crul async connection")
+  expect_output(aa$print(), "curl options")
+  expect_output(aa$print(), "proxies")
+  expect_output(aa$print(), "auth")
+  expect_output(aa$print(), "headers")
   expect_output(aa$print(), "urls:")
   expect_output(aa$print(), hb('/get'))
   expect_output(aa$print(), 'https://google.com')
@@ -52,6 +56,31 @@ test_that("Async print method", {
 
   expect_output(aa$print(), "# ... with")
   expect_output(aa$print(), hb('/get'))
+})
+
+
+test_that("Async curl options work", {
+  skip_on_cran()
+  
+  aa <- Async$new(urls = c(hb('/get'), 'https://google.com'), 
+    opts = list(timeout_ms = 100))
+  expect_output(aa$print(), "curl options")
+  expect_output(aa$print(), "timeout_ms: 100")
+
+  expect_equal(vapply(aa$get(), "[[", 1, "status_code"), c(0, 0))
+})
+
+test_that("Async headers work", {
+  skip_on_cran()
+  
+  aa <- Async$new(urls = c(hb('/get'), 'https://google.com'), 
+    headers = list(foo = "bar"))
+  expect_output(aa$print(), "headers")
+  expect_output(aa$print(), "foo: bar")
+
+  bb <- aa$get()
+  expect_equal(vapply(bb, function(x) x$request_headers[[1]], ""), 
+    c("bar", "bar"))
 })
 
 
@@ -296,8 +325,8 @@ test_that("Async - streaming to disk works", {
   bb <- Async$new(urls = c(hb('/get?a=5'),
                            hb('/get?b=6'),
                            hb('/get?c=7')))
-  mylist <- c()
-  fun <- function(x) mylist <<- c(mylist, x)
+  lst <- c()
+  fun <- function(x) lst <<- append(lst, list(x))
   out <- bb$get(stream = fun)
 
   expect_is(bb, "Async")
@@ -308,8 +337,10 @@ test_that("Async - streaming to disk works", {
   expect_identical(out[[2]]$content, raw(0))
   expect_identical(out[[3]]$content, raw(0))
 
-  expect_is(mylist, "raw")
-  expect_is(rawToChar(mylist), "character")
+  expect_is(lst, "list")
+  expect_is(rawToChar(lst[[1]]$content), "character")
+  expect_is(rawToChar(lst[[2]]$content), "character")
+  expect_is(rawToChar(lst[[3]]$content), "character")
 })
 
 
@@ -318,8 +349,11 @@ context("Async - basic auth")
 test_that("Async - with basic auth works", {
   skip_on_cran()
 
-  dd <- Async$new(urls = rep(hb('/basic-auth/user/passwd'), 3))
-  out <- dd$get(auth = auth(user = "user", pwd = "passwd"))
+  dd <- Async$new(
+    urls = rep(hb('/basic-auth/user/passwd'), 3), 
+    auth = auth(user = "user", pwd = "passwd")
+  )
+  out <- dd$get()
   
   expect_is(dd, "Async")
 
@@ -357,7 +391,7 @@ test_that("Async - failure behavior", {
   expect_true(res[[3]]$success())
 
   expect_match(res[[1]]$parse("UTF-8"), "resolve host")
-  expect_match(res[[2]]$parse("UTF-8"), "Failed to connect")
+  expect_match(res[[2]]$parse("UTF-8"), "onnect")
 })
 
 context("Async - failure behavior w/ bad URLs/etc. - disk")
@@ -384,8 +418,8 @@ test_that("Async - failure behavior", {
   expect_true(res[[3]]$success())
 
   expect_match(res[[1]]$parse("UTF-8"), "resolve host")
-  expect_match(res[[2]]$parse("UTF-8"), "Failed to connect")
-  expect_equal(res[[3]]$parse("UTF-8"), "")
+  expect_is(res[[2]]$parse("UTF-8"), "character")
+  expect_match(res[[3]]$parse("UTF-8"), "DOCTYPE")
 
   expect_equal(length(readLines(files[1])), 0)
   expect_equal(length(readLines(files[2])), 0)
@@ -400,7 +434,7 @@ test_that("Async - failure behavior", {
   skip_on_cran()
 
   mylist <- c()
-  fun <- function(x) mylist <<- c(mylist, x)
+  fun <- function(x) mylist <<- append(mylist, list(x))
 
   urls <- c("http://stuffthings.gvb", "https://foo.com", "https://scottchamberlain.info")
   conn <- Async$new(urls = urls)
@@ -412,17 +446,21 @@ test_that("Async - failure behavior", {
   expect_is(res[[2]], "HttpResponse")
   expect_is(res[[3]], "HttpResponse")
 
+  # this doesn't mean anything really since we give a templated repsonse with 
+  # status_code of 0
   expect_equal(res[[1]]$status_code, 0)
   expect_equal(res[[2]]$status_code, 0)
-  expect_equal(res[[3]]$status_code, 200)
+  expect_equal(res[[3]]$status_code, 0)
 
+  # this doesn't mean anything really since we give a templated repsonse with 
+  # status_code of 0 
   expect_false(res[[1]]$success())
   expect_false(res[[2]]$success())
-  expect_true(res[[3]]$success())
+  expect_false(res[[3]]$success())
 
   # when fails on async, has the error message
   expect_match(res[[1]]$parse("UTF-8"), "resolve host")
-  expect_match(res[[2]]$parse("UTF-8"), "Failed to connect")
+  expect_match(res[[2]]$parse("UTF-8"), "onnect")
   # when not a fail, has nothing
   expect_identical(res[[3]]$parse("UTF-8"), "")
 
