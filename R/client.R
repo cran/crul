@@ -1,91 +1,23 @@
-#' HTTP client
+#' @title HTTP client
+#' @description Create and execute HTTP requests
 #'
 #' @export
 #' @template args
-#' @details
-#' **Methods**
-#'   \describe{
-#'     \item{`get(path, query, disk, stream, ...)`}{
-#'       Make a GET request
-#'     }
-#'     \item{`post(path, query, body, disk, stream, ...)`}{
-#'       Make a POST request
-#'     }
-#'     \item{`put(path, query, body, disk, stream, ...)`}{
-#'       Make a PUT request
-#'     }
-#'     \item{`patch(path, query, body, disk, stream, ...)`}{
-#'       Make a PATCH request
-#'     }
-#'     \item{`delete(path, query, body, disk, stream, ...)`}{
-#'       Make a DELETE request
-#'     }
-#'     \item{`head(path, query, ...)`}{
-#'       Make a HEAD request
-#'     }
-#'     \item{`verb(verb, ...)`}{
-#'       Use an arbitrary HTTP verb supported on this class
-#'       Supported verbs: get, post, put, patch, delete, head. Also supports
-#'       retry
-#'     }
-#'     \item{`retry(verb, ..., pause_base = 1, pause_cap = 60, pause_min = 1, times = 3,
-#'                  terminate_on, retry_only_on, onwait)`}{
-#'       Retries the request given by `verb` until successful (HTTP response
-#'       status < 400), or a condition for giving up is met. Automatically
-#'       recognizes `Retry-After` and `X-RateLimit-Reset` headers in the
-#'       response for rate-limited remote APIs.
-#'     }
-#'     \item{`handle_pop()`}{
-#'       reset your curl handle
-#'     }
-#'     \item{`url_fetch(path, query)`}{
-#'       get the URL that would be sent (i.e., before executing the request).
-#'       the only things that change the URL are path and query
-#'       parameters; body and any curl options don't change the URL
-#'       - returns: URL as a character vector
-#'     }
-#'   }
-#'
-#' @format NULL
-#' @usage NULL
+#' @param path URL path, appended to the base URL
+#' @param query query terms, as a named list
+#' @param body body as an R list
+#' @param encode one of form, multipart, json, or raw
+#' @param disk a path to write to. if NULL (default), memory used.
+#' See [curl::curl_fetch_disk()] for help.
+#' @param stream an R function to determine how to stream data. if
+#' NULL (default), memory used. See [curl::curl_fetch_stream()]
+#' for help
+#' @param ... For `retry`, the options to be passed on to the method
+#' implementing the requested verb, including curl options. Otherwise,
+#' curl options, only those in the acceptable set from [curl::curl_options()]
+#' except the following: httpget, httppost, post, postfields, postfieldsize,
+#' and customrequest
 #' @return an [HttpResponse] object
-#' @details Possible parameters (not all are allowed in each HTTP verb):
-#' \itemize{
-#'  \item `path` - URL path, appended to the base URL
-#'  \item `query` - query terms, as a named list
-#'  \item `body` - body as an R list
-#'  \item `encode` - one of form, multipart, json, or raw
-#'  \item `disk` - a path to write to. if NULL (default), memory used.
-#'  See [curl::curl_fetch_disk()] for help.
-#'  \item `stream` - an R function to determine how to stream data. if
-#'  NULL (default), memory used. See [curl::curl_fetch_stream()]
-#'  for help
-#'  \item `verb` - an HTTP verb supported on this class: get, post, put,
-#'  patch, delete, head. Also supports retry.
-#'  \item `...` - For `retry`, the options to be passed on to the method
-#'  implementing the requested verb, including curl options. Otherwise,
-#'  curl options, only those in the acceptable set from [curl::curl_options()]
-#'  except the following: httpget, httppost, post, postfields, postfieldsize,
-#'  and customrequest
-#'  \item `pause_base,pause_cap,pause_min` - basis, maximum, and minimum for
-#'  calculating wait time for retry. Wait time is calculated according to the
-#'  exponential backoff with full jitter algorithm. Specifically, wait time is
-#'  chosen randomly between `pause_min` and the lesser of `pause_base * 2` and
-#'  `pause_cap`, with `pause_base` doubling on each subsequent retry attempt.
-#'  Use `pause_cap = Inf` to not terminate retrying due to cap of wait time
-#'  reached.
-#'  \item `times` - the maximum number of times to retry. Set to `Inf` to
-#'  not stop retrying due to exhausting the number of attempts.
-#'  \item `terminate_on,retry_only_on` - a vector of HTTP status codes. For
-#'  `terminate_on`, the status codes for which to terminate retrying, and for
-#'  `retry_only_on`, the status codes for which to retry the request.
-#'  \item `onwait` - a callback function if the request will be retried and
-#'  a wait time is being applied. The function will be passed two parameters,
-#'  the response object from the failed request, and the wait time in seconds.
-#'  Note that the time spent in the function effectively adds to the wait time,
-#'  so it should be kept simple.
-#' }
-#'
 #' @section handles:
 #' curl handles are re-used on the level of the connection object, that is,
 #' each `HttpClient` object is separate from one another so as to better
@@ -107,8 +39,7 @@
 #' it is returned as `request_headers$User-Agent` so at least accessing
 #' it in the request headers is consistent.
 #'
-#' @seealso [post-requests], [delete-requests], [http-headers],
-#' [writing-options], [cookies], [hooks]
+#' @seealso [http-headers], [writing-options], [cookies], [hooks]
 #'
 #' @examples \dontrun{
 #' # set your own handle
@@ -162,33 +93,10 @@
 #' # head request
 #' (res_head <- x$head())
 #'
-#' # arbitrary verb
-#' (x <- HttpClient$new(url = "https://httpbin.org"))
-#' x$verb('get')
-#' x$verb('GET')
-#' x$verb('GET', query = list(foo = "bar"))
-#' x$verb('retry', 'GET', path = "status/400")
-#'
-#' # retry, by default at most 3 times
-#' (res_get <- x$retry("GET", path = "status/400"))
-#'
-#' # retry, but not for 404 NOT FOUND
-#' (res_get <- x$retry("GET", path = "status/404", terminate_on = c(404)))
-#'
-#' # retry, but only for exceeding rate limit (note that e.g. Github uses 403)
-#' (res_get <- x$retry("GET", path = "status/429", retry_only_on = c(403, 429)))
-#'
 #' # query params are URL encoded for you, so DO NOT do it yourself
 #' ## if you url encode yourself, it gets double encoded, and that's bad
 #' (x <- HttpClient$new(url = "https://httpbin.org"))
 #' res <- x$get("get", query = list(a = 'hello world'))
-#'
-#' # get full url before the request is made
-#' (x <- HttpClient$new(url = "https://httpbin.org"))
-#' x$url_fetch()
-#' x$url_fetch('get')
-#' x$url_fetch('post')
-#' x$url_fetch('get', query = list(foo = "bar"))
 #'
 #' # access intermediate headers in response_headers_all
 #' x <- HttpClient$new("https://doi.org/10.1007/978-3-642-40455-9_52-1")
@@ -199,15 +107,26 @@
 HttpClient <- R6::R6Class(
   'HttpClient',
   public = list(
+    #' @field url (character) a url
     url = NULL,
+    #' @field opts (list) named list of curl options
     opts = list(),
+    #' @field proxies a [proxy()] object
     proxies = list(),
+    #' @field auth an [auth()] object
     auth = list(),
+    #' @field headers (list) named list of headers, see [http-headers]
     headers = list(),
+    #' @field handle a [handle()]
     handle = NULL,
+    #' @field progress only supports `httr::progress()`, see [progress]
     progress = NULL,
+    #' @field hooks a named list, see [hooks]
     hooks = list(),
 
+    #' @description print method for `HttpClient` objects
+    #' @param x self
+    #' @param ... ignored
     print = function(x, ...) {
       cat("<crul connection> ", sep = "\n")
       cat(paste0("  url: ",
@@ -215,8 +134,8 @@ HttpClient <- R6::R6Class(
           sep = "\n")
       cat("  curl options: ", sep = "\n")
       for (i in seq_along(self$opts)) {
-        cat(sprintf("    %s: %s", names(self$opts)[i],
-                    self$opts[[i]]), sep = "\n")
+        z <- if (inherits(self$opts[[i]], "function")) "<function>" else self$opts[[i]]
+        cat(sprintf("    %s: %s", names(self$opts)[i], z), sep = "\n")
       }
       cat("  proxies: ", sep = "\n")
       if (length(self$proxies)) cat(paste("    -", purl(self$proxies)),
@@ -241,14 +160,33 @@ HttpClient <- R6::R6Class(
       invisible(self)
     },
 
+    #' @description Create a new HttpClient object
+    #' @param urls (character) one or more URLs
+    #' @param opts any curl options
+    #' @param proxies a [proxy()] object
+    #' @param auth an [auth()] object
+    #' @param headers named list of headers, see [http-headers]
+    #' @param handle a [handle()]
+    #' @param progress only supports `httr::progress()`, see [progress]
+    #' @param hooks a named list, see [hooks]
+    #' @param verbose a special handler for verbose curl output, 
+    #' accepts a function only. default is `NULL`. if used, `verbose`
+    #' and `debugfunction` curl options are ignored if passed to `opts`
+    #' on `$new()` and ignored if `...` passed to a http method call
+    #' @return A new `HttpClient` object
     initialize = function(url, opts, proxies, auth, headers, handle,
-      progress, hooks) {
+      progress, hooks, verbose) {
       private$crul_h_pool <- new.env(hash = TRUE, parent = emptyenv())
       if (!missing(url)) self$url <- url
 
       # curl options: check for set_opts first
       if (!is.null(crul_opts$opts)) self$opts <- crul_opts$opts
-      if (!missing(opts)) self$opts <- opts
+      if (!missing(opts) && length(opts) > 0) self$opts <- opts
+      if (!missing(verbose)) {
+        assert(verbose, "function")
+        self$opts$verbose <- TRUE
+        self$opts$debugfunction <- verbose
+      }
 
       # proxy: check for set_proxy first
       if (!is.null(crul_opts$proxies)) self$proxies <- crul_opts$proxies
@@ -299,6 +237,7 @@ HttpClient <- R6::R6Class(
       }
     },
 
+    #' @description Make a GET request
     get = function(path = NULL, query = list(), disk = NULL,
                    stream = NULL, ...) {
       curl_opts_check(...)
@@ -324,6 +263,7 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    #' @description Make a POST request
     post = function(path = NULL, query = list(), body = NULL, disk = NULL,
                     stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
@@ -335,6 +275,7 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    #' @description Make a PUT request
     put = function(path = NULL, query = list(), body = NULL, disk = NULL,
                    stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
@@ -346,6 +287,7 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    #' @description Make a PATCH request
     patch = function(path = NULL, query = list(), body = NULL, disk = NULL,
                      stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
@@ -357,6 +299,7 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    #' @description Make a DELETE request
     delete = function(path = NULL, query = list(), body = NULL, disk = NULL,
                       stream = NULL, encode = "multipart", ...) {
       curl_opts_check(...)
@@ -368,6 +311,7 @@ HttpClient <- R6::R6Class(
       private$make_request(rr)
     },
 
+    #' @description Make a HEAD request
     head = function(path = NULL, query = list(), ...) {
       curl_opts_check(...)
       url <- private$make_url(self$url, self$handle, path, query)
@@ -387,9 +331,22 @@ HttpClient <- R6::R6Class(
       rr$options <- utils::modifyList(
         rr$options,
         c(self$opts, self$proxies, self$auth, ...))
+      rr$options <- curl_opts_fil(rr$options)
       private$make_request(rr)
     },
 
+    #' @description Use an arbitrary HTTP verb supported on this class
+    #' Supported verbs: "get", "post", "put", "patch", "delete", "head". Also
+    #' supports retry
+    #' @param verb an HTTP verb supported on this class: "get",
+    #' "post", "put", "patch", "delete", "head". Also supports retry.
+    #' @examples \dontrun{
+    #' (x <- HttpClient$new(url = "https://httpbin.org"))
+    #' x$verb('get')
+    #' x$verb('GET')
+    #' x$verb('GET', query = list(foo = "bar"))
+    #' x$verb('retry', 'GET', path = "status/400")
+    #' }
     verb = function(verb, ...) {
       stopifnot(is.character(verb), length(verb) > 0)
       verbs <- c("get", "post", "put", "patch",
@@ -401,6 +358,42 @@ HttpClient <- R6::R6Class(
       verb_func(...)
     },
 
+    #' @description Retry a request
+    #' @details Retries the request given by `verb` until successful
+    #' (HTTP response status < 400), or a condition for giving up is met.
+    #' Automatically recognizes `Retry-After` and `X-RateLimit-Reset` headers
+    #' in the response for rate-limited remote APIs.
+    #' @param verb an HTTP verb supported on this class: "get",
+    #' "post", "put", "patch", "delete", "head". Also supports retry.
+    #' @param times the maximum number of times to retry. Set to `Inf` to
+    #' not stop retrying due to exhausting the number of attempts.
+    #' @param pause_base,pause_cap,pause_min basis, maximum, and minimum for
+    #' calculating wait time for retry. Wait time is calculated according to the
+    #' exponential backoff with full jitter algorithm. Specifically, wait time is
+    #' chosen randomly between `pause_min` and the lesser of `pause_base * 2` and
+    #' `pause_cap`, with `pause_base` doubling on each subsequent retry attempt.
+    #' Use `pause_cap = Inf` to not terminate retrying due to cap of wait time
+    #' reached.
+    #' @param terminate_on,retry_only_on a vector of HTTP status codes. For
+    #' `terminate_on`, the status codes for which to terminate retrying, and for
+    #' `retry_only_on`, the status codes for which to retry the request.
+    #' @param onwait a callback function if the request will be retried and
+    #' a wait time is being applied. The function will be passed two parameters,
+    #' the response object from the failed request, and the wait time in seconds.
+    #' Note that the time spent in the function effectively adds to the wait time,
+    #' so it should be kept simple.
+    #' @examples \dontrun{
+    #' x <- HttpClient$new(url = "https://httpbin.org")
+    #'
+    #' # retry, by default at most 3 times
+    #' (res_get <- x$retry("GET", path = "status/400"))
+    #'
+    #' # retry, but not for 404 NOT FOUND
+    #' (res_get <- x$retry("GET", path = "status/404", terminate_on = c(404)))
+    #'
+    #' # retry, but only for exceeding rate limit (note that e.g. Github uses 403)
+    #' (res_get <- x$retry("GET", path = "status/429", retry_only_on = c(403, 429)))
+    #' }
     retry = function(verb, ...,
                      pause_base = 1, pause_cap = 60, pause_min = 1, times = 3,
                      terminate_on = NULL, retry_only_on = NULL,
@@ -445,6 +438,7 @@ HttpClient <- R6::R6Class(
       resp
     },
 
+    #' @description reset your curl handle
     handle_pop = function() {
       name <- handle_make(self$url)
       if (exists(name, envir = private$crul_h_pool)) {
@@ -452,6 +446,16 @@ HttpClient <- R6::R6Class(
       }
     },
 
+    #' @description get the URL that would be sent (i.e., before executing
+    #' the request) the only things that change the URL are path and query
+    #' parameters; body and any curl options don't change the URL
+    #' @return URL (character)
+    #' @examples
+    #' x <- HttpClient$new(url = "https://httpbin.org")
+    #' x$url_fetch()
+    #' x$url_fetch('get')
+    #' x$url_fetch('post')
+    #' x$url_fetch('get', query = list(foo = "bar"))
     url_fetch = function(path = NULL, query = list()) {
       private$make_url(self$url, path = path, query = query)$url
     }

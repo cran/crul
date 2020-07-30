@@ -4,25 +4,36 @@
 \alias{ok}
 \title{check if a url is okay}
 \usage{
-ok(x, status = 200L, info = TRUE, ...)
+ok(x, status = 200L, info = TRUE, verb = "head", ua_random = FALSE, ...)
 }
 \arguments{
 \item{x}{either a URL as a character string, or an object of
 class \link{HttpClient}}
 
-\item{status}{(integer) an HTTP status code, must be an integer.
-By default this is 200L, since this is the most common signal
+\item{status}{(integer) one or more HTTP status codes, must be integers.
+default: \code{200L}, since this is the most common signal
 that a URL is okay, but there may be cases in which your URL
-is okay if it's a 201L, or some other status code.}
+is okay if it's a \code{201L}, or some other status code.}
 
 \item{info}{(logical) in the case of an error, do you want a
 \code{message()} about it? Default: \code{TRUE}}
+
+\item{verb}{(character) use "head" (default) or "get" HTTP verb
+for the request. note that "get" will take longer as it returns a
+body. however, "verb=get" may be your only option if a url
+blocks head requests}
+
+\item{ua_random}{(logical) use a random user agent string?
+default: \code{TRUE}. if you set \code{useragent} curl option it will override
+this setting. The random user agent string is pulled from a vector of
+50 user agent strings generated from \code{charlatan::UserAgentProvider}
+(by executing \code{replicate(30, UserAgentProvider$new()$user_agent())})}
 
 \item{...}{args passed on to \link{HttpClient}}
 }
 \value{
 a single boolean, if \code{TRUE} the URL is up and okay,
-if \code{FALSE} it is down.
+if \code{FALSE} it is down; but, see Details
 }
 \description{
 check if a url is okay
@@ -30,19 +41,67 @@ check if a url is okay
 \details{
 We internally verify that status is an integer and
 in the known set of HTTP status codes, and that info is a boolean
+
+You may have to fiddle with the parameters to \code{ok()} as well as
+curl options to get the "right answer". If you think you are getting
+incorrectly getting \code{FALSE}, the first thing to do is to pass in
+\code{verbose=TRUE} to \code{ok()}. That will give you verbose curl output and will
+help determine what the issue may be. Here's some different scenarios:
+\itemize{
+\item the site blocks head requests: some sites do this, try \code{verb="get"}
+\item it will be hard to determine a site that requires this, but it's
+worth trying a random useragent string, e.g., \code{ok(useragent = "foobar")}
+\item some sites are up and reachable but you could get a 403 Unauthorized
+error, there's nothing you can do in this case other than having access
+\item its possible to get a weird HTTP status code, e.g., LinkedIn gives
+a 999 code, they're trying to prevent any programmatic access
+}
+
+A \code{FALSE} result may be incorrect depending on the use case. For example,
+if you want to know if curl based scraping will work without fiddling with
+curl options, then the \code{FALSE} is probably correct, but if you want to
+fiddle with curl options, then first step would be to send \code{verbose=TRUE}
+to see whats going on with any redirects and headers. You can set headers,
+user agent strings, etc. to get closer to the request you want to know
+about. Note that a user agent string is always passed by default, but it
+may not be the one you want.
 }
 \examples{
 \dontrun{
 # 200
-ok("https://google.com") 
+ok("https://www.google.com") 
 # 200
 ok("https://httpbin.org/status/200")
+# more than one status
+ok("https://www.google.com", status = c(200L, 202L))
 # 404
 ok("https://httpbin.org/status/404")
 # doesn't exist
 ok("https://stuff.bar")
 # doesn't exist
 ok("stuff")
+
+# use get verb instead of head
+ok("http://animalnexus.ca")
+ok("http://animalnexus.ca", verb = "get")
+
+# some urls will require a different useragent string
+# they probably regex the useragent string
+ok("https://doi.org/10.1093/chemse/bjq042")
+ok("https://doi.org/10.1093/chemse/bjq042", verb = "get", useragent = "foobar")
+
+# with random user agent's
+## here, use a request hook to print out just the user agent string so 
+## we can see what user agent string is being sent off
+fun_ua <- function(request) {
+  message(paste0("User-agent: ", request$options$useragent), sep = "\n")
+}
+z <- crul::HttpClient$new("https://doi.org/10.1093/chemse/bjq042", 
+ hooks = list(request = fun_ua))
+z
+replicate(5, ok(z, ua_random=TRUE), simplify=FALSE)
+## if you set useragent option it will override ua_random=TRUE
+ok("https://doi.org/10.1093/chemse/bjq042", useragent="foobar", ua_random=TRUE)
 
 # with HttpClient
 z <- crul::HttpClient$new("https://httpbin.org/status/404", 

@@ -11,6 +11,15 @@ assert <- function(x, y) {
   }
 }
 
+assert_opts <- function(x, y) {
+  if (!is.null(x)) {
+    if (!x %in% y) {
+      stop(deparse(substitute(x)), " must be in the set ",
+           paste0(y, collapse = ", "), call. = FALSE)
+    }
+  }
+}
+
 prep_opts <- function(method, url, self, opts, ...) {
   if (method != "post") {
     opts$opts$customrequest <- toupper(method)
@@ -63,8 +72,7 @@ def_head <- function() {
   )
 }
 
-# drop any options that are not in the set of
-# valid curl options
+# drop any options that are not in the set of valid curl options
 curl_opts_fil <- function(z) {
   valco <- names(curl::curl_options())
   z[names(z) %in% valco]
