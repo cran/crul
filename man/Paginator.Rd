@@ -18,12 +18,14 @@ See \code{\link[=HttpClient]{HttpClient()}} for information on parameters
 
 Supported now:
 \itemize{
-\item \code{query_params}: the most common way, so is the default. This method
-involves setting how many records and what record to start at for each
-request. We send these query parameters for you.
+\item \code{limit_offset}: the most common way (in my experience), so is the default.
+This method involves setting how many records and what record to start at
+for each request. We send these query parameters for you.
+\item \code{page_perpage}: set the page to fetch and (optionally) how many records
+to get per page
 }
 
-Supported later:
+Supported later, hopefully:
 \itemize{
 \item \code{link_headers}: link headers are URLS for the next/previous/last
 request given in the response header from the server. This is relatively
@@ -37,9 +39,11 @@ remain. This is common in Solr
 
 \examples{
 \dontrun{
-(cli <- HttpClient$new(url = "https://api.crossref.org"))
-cc <- Paginator$new(client = cli, limit_param = "rows",
-   offset_param = "offset", limit = 50, limit_chunk = 10)
+if (interactive()) {
+# limit/offset approach
+con <- HttpClient$new(url = "https://api.crossref.org")
+cc <- Paginator$new(client = con, limit_param = "rows",
+   offset_param = "offset", limit = 50, chunk = 10)
 cc
 cc$get('works')
 cc
@@ -47,18 +51,47 @@ cc$responses()
 cc$status()
 cc$status_code()
 cc$times()
-cc$content()
+# cc$content()
 cc$parse()
 lapply(cc$parse(), jsonlite::fromJSON)
 
+# page/per page approach (with no per_page param allowed)
+conn <- HttpClient$new(url = "https://discuss.ropensci.org")
+cc <- Paginator$new(client = conn, by = "page_perpage",
+ page_param = "page", per_page_param = "per_page", limit = 90, chunk = 30)
+cc
+cc$get('c/usecases/l/latest.json')
+cc$responses()
+lapply(cc$parse(), jsonlite::fromJSON)
+
+# page/per_page
+conn <- HttpClient$new('https://api.inaturalist.org')
+cc <- Paginator$new(conn, by = "page_perpage", page_param = "page",
+ per_page_param = "per_page", limit = 90, chunk = 30)
+cc
+cc$get('v1/observations', query = list(taxon_name="Helianthus"))
+cc$responses()
+res <- lapply(cc$parse(), jsonlite::fromJSON)
+res[[1]]$total_results
+vapply(res, "[[", 1L, "page")
+vapply(res, "[[", 1L, "per_page")
+vapply(res, function(w) NROW(w$results), 1L)
+## another
+ccc <- Paginator$new(conn, by = "page_perpage", page_param = "page",
+ per_page_param = "per_page", limit = 500, chunk = 30, progress = TRUE)
+ccc
+ccc$get('v1/observations', query = list(taxon_name="Helianthus"))
+res2 <- lapply(ccc$parse(), jsonlite::fromJSON)
+vapply(res2, function(w) NROW(w$results), 1L)
+
 # progress bar
-(cli <- HttpClient$new(url = "https://api.crossref.org"))
-cc <- Paginator$new(client = cli, limit_param = "rows",
-   offset_param = "offset", limit = 50, limit_chunk = 10,
+(con <- HttpClient$new(url = "https://api.crossref.org"))
+cc <- Paginator$new(client = con, limit_param = "rows",
+   offset_param = "offset", limit = 50, chunk = 10,
    progress = TRUE)
 cc
 cc$get('works')
-}
+}}
 
 ## ------------------------------------------------
 ## Method `Paginator$url_fetch`
@@ -67,7 +100,7 @@ cc$get('works')
 \dontrun{
 cli <- HttpClient$new(url = "https://api.crossref.org")
 cc <- Paginator$new(client = cli, limit_param = "rows",
-   offset_param = "offset", limit = 50, limit_chunk = 10)
+   offset_param = "offset", limit = 50, chunk = 10)
 cc$url_fetch('works')
 cc$url_fetch('works', query = list(query = "NSF"))
 }
@@ -77,12 +110,14 @@ cc$url_fetch('works', query = list(query = "NSF"))
 \describe{
 \item{\code{http_req}}{an object of class \code{HttpClient}}
 
-\item{\code{by}}{(character) how to paginate. Only 'query_params' supported
+\item{\code{by}}{(character) how to paginate. Only 'limit_offset' supported
 for now. In the future will support 'link_headers' and 'cursor'.
 See Details.}
 
-\item{\code{limit_chunk}}{(numeric/integer) the number by which to chunk
-requests, e.g., 10 would be be each request gets 10 records}
+\item{\code{chunk}}{(numeric/integer) the number by which to chunk
+requests, e.g., 10 would be be each request gets 10 records.
+number is passed through \code{\link[=format]{format()}} to prevent larger numbers
+from being scientifically formatted}
 
 \item{\code{limit_param}}{(character) the name of the limit parameter.
 Default: limit}
@@ -90,7 +125,15 @@ Default: limit}
 \item{\code{offset_param}}{(character) the name of the offset parameter.
 Default: offset}
 
-\item{\code{limit}}{(numeric/integer) the maximum records wanted}
+\item{\code{limit}}{(numeric/integer) the maximum records wanted.
+number is passed through \code{\link[=format]{format()}} to prevent larger numbers
+from being scientifically formatted}
+
+\item{\code{page_param}}{(character) the name of the page parameter.
+Default: NULL}
+
+\item{\code{per_page_param}}{(character) the name of the per page parameter.
+Default: NULL}
 
 \item{\code{progress}}{(logical) print a progress bar, using \link[utils:txtProgressBar]{utils::txtProgressBar}.
 Default: \code{FALSE}.}
@@ -145,11 +188,13 @@ Create a new \code{Paginator} object
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Paginator$new(
   client,
-  by = "query_params",
-  limit_param,
-  offset_param,
-  limit,
-  limit_chunk,
+  by = "limit_offset",
+  limit_param = NULL,
+  offset_param = NULL,
+  limit = NULL,
+  chunk = NULL,
+  page_param = NULL,
+  per_page_param = NULL,
   progress = FALSE
 )}\if{html}{\out{</div>}}
 }
@@ -159,7 +204,7 @@ Create a new \code{Paginator} object
 \describe{
 \item{\code{client}}{an object of class \code{HttpClient}, from a call to \link{HttpClient}}
 
-\item{\code{by}}{(character) how to paginate. Only 'query_params' supported for
+\item{\code{by}}{(character) how to paginate. Only 'limit_offset' supported for
 now. In the future will support 'link_headers' and 'cursor'. See Details.}
 
 \item{\code{limit_param}}{(character) the name of the limit parameter.
@@ -170,8 +215,12 @@ Default: offset}
 
 \item{\code{limit}}{(numeric/integer) the maximum records wanted}
 
-\item{\code{limit_chunk}}{(numeric/integer) the number by which to chunk requests,
+\item{\code{chunk}}{(numeric/integer) the number by which to chunk requests,
 e.g., 10 would be be each request gets 10 records}
+
+\item{\code{page_param}}{(character) the name of the page parameter.}
+
+\item{\code{per_page_param}}{(character) the name of the per page parameter.}
 
 \item{\code{progress}}{(logical) print a progress bar, using \link[utils:txtProgressBar]{utils::txtProgressBar}.
 Default: \code{FALSE}.}
@@ -196,7 +245,9 @@ make a paginated GET request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -227,7 +278,9 @@ make a paginated POST request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -262,7 +315,9 @@ make a paginated PUT request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -297,7 +352,9 @@ make a paginated PATCH request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -332,7 +389,9 @@ make a paginated DELETE request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -477,7 +536,9 @@ parameters; body and any curl options don't change the URL
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 }
 \if{html}{\out{</div>}}
 }
@@ -489,7 +550,7 @@ URLs (character)
 \preformatted{\dontrun{
 cli <- HttpClient$new(url = "https://api.crossref.org")
 cc <- Paginator$new(client = cli, limit_param = "rows",
-   offset_param = "offset", limit = 50, limit_chunk = 10)
+   offset_param = "offset", limit = 50, chunk = 10)
 cc$url_fetch('works')
 cc$url_fetch('works', query = list(query = "NSF"))
 }

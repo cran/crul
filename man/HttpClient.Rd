@@ -28,7 +28,9 @@ separate connections.
 If you don't pass in a curl handle to the \code{handle} parameter,
 it gets created when a HTTP verb is called. Thus, if you try to get \code{handle}
 after creating a \code{HttpClient} object only passing \code{url} parameter, \code{handle}
-will be \code{NULL}. If you pass a curl handle to the \verb{handle parameter, then you can get the handle from the }HttpClient\verb{object. The response from a http verb request does have the handle in the}handle` slot.
+will be \code{NULL}. If you pass a curl handle to the \code{handle} parameter, then
+you can get the handle from the \code{HttpClient} object. The response from a
+http verb request does have the handle in the \code{handle} slot.
 }
 
 \examples{
@@ -260,7 +262,9 @@ Make a GET request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{disk}}{a path to write to. if NULL (default), memory used.
 See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
@@ -300,7 +304,9 @@ Make a POST request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -344,7 +350,9 @@ Make a PUT request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -388,7 +396,9 @@ Make a PATCH request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -432,7 +442,9 @@ Make a DELETE request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{body}}{body as an R list}
 
@@ -468,7 +480,9 @@ Make a HEAD request
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -626,7 +640,9 @@ parameters; body and any curl options don't change the URL
 \describe{
 \item{\code{path}}{URL path, appended to the base URL}
 
-\item{\code{query}}{query terms, as a named list}
+\item{\code{query}}{query terms, as a named list. any numeric values are
+passed through \code{\link[=format]{format()}} to prevent larger numbers from being
+scientifically formatted}
 }
 \if{html}{\out{</div>}}
 }

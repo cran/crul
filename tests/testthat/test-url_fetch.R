@@ -11,7 +11,7 @@ test_that("HttpClient url_fetch base url only", {
 
 test_that("HttpClient url_fetch with base url and path", {
   skip_on_cran()
- 
+
   expect_is(x$url_fetch('get'), "character")
   expect_match(x$url_fetch('get'), url)
   expect_match(x$url_fetch('get'), "/get")
@@ -21,7 +21,7 @@ test_that("HttpClient url_fetch with base url and path", {
   expect_match(x$url_fetch('post'), url)
   expect_match(x$url_fetch('post'), "/post")
   expect_match(x$url_fetch('post'), "http")
-  
+
   expect_is(x$url_fetch('post'), "character")
   expect_match(x$url_fetch('post'), url)
   expect_match(x$url_fetch('post'), "/post")
@@ -30,7 +30,7 @@ test_that("HttpClient url_fetch with base url and path", {
 
 test_that("HttpClient url_fetch with base url, path, query", {
   skip_on_cran()
- 
+
   out <- x$url_fetch('get', query = list(foo = "bar"))
 
   expect_is(out, "character")
@@ -49,13 +49,32 @@ test_that("HttpClient url_fetch with base url, path, query", {
 })
 
 
+context("HttpCLient: url_fetch w/ bigger numbers")
+cr_url <- "https://api.crossref.org"
+con <- HttpClient$new(url = cr_url)
+test_that("HttpClient url_fetch w/ bigger numbers", {
+  skip_on_cran()
+
+  expect_match(con$url_fetch(query = list(limit = 0)),
+    "limit=0")
+  expect_match(con$url_fetch(query = list(limit = 100000)),
+    "limit=100000")
+  expect_match(con$url_fetch(query = list(limit = 200000)),
+    "limit=200000")
+  expect_match(con$url_fetch(query = list(limit = 300000)),
+    "limit=300000")
+  expect_match(con$url_fetch(query = list(limit = 400000)),
+    "limit=400000")
+})
+
+
 
 
 context("paginator: url_fetch")
 cr_url <- "https://api.crossref.org"
 cli <- HttpClient$new(url = cr_url)
-aa <- Paginator$new(client = cli, by = "query_params", limit_param = "rows",
-  offset_param = "offset", limit = 50, limit_chunk = 10)
+aa <- Paginator$new(client = cli, by = "limit_offset", limit_param = "rows",
+  offset_param = "offset", limit = 500000, chunk = 100000)
 test_that("Paginator url_fetch base url only", {
   skip_on_cran()
 
@@ -69,12 +88,12 @@ test_that("Paginator url_fetch base url only", {
   expect_match(aa$url_fetch(), "rows")
   # offset different for every url
   expect_match(aa$url_fetch()[1], "offset=0")
-  expect_match(aa$url_fetch()[2], "offset=10")
-  expect_match(aa$url_fetch()[3], "offset=20")
-  expect_match(aa$url_fetch()[4], "offset=30")
-  expect_match(aa$url_fetch()[5], "offset=40")
+  expect_match(aa$url_fetch()[2], "offset=100000")
+  expect_match(aa$url_fetch()[3], "offset=200000")
+  expect_match(aa$url_fetch()[4], "offset=300000")
+  expect_match(aa$url_fetch()[5], "offset=400000")
   # rows same for every url
-  expect_match(aa$url_fetch(), "rows=10")
+  expect_match(aa$url_fetch(), "rows=100000")
 })
 
 test_that("Paginator url_fetch with base url and path", {
