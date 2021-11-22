@@ -43,6 +43,14 @@ method
 }
 }
 
+\section{R6 classes}{
+
+This is an R6 class from the package \pkg{R6}. Find out more
+about R6 at \url{https://r6.r-lib.org/}. After creating an instance of an R6
+class (e.g., \code{x <- HttpClient$new(url = "https://httpbin.org")}) you can
+access values and methods on the object \code{x}.
+}
+
 \examples{
 \dontrun{
 # pass in requests via ...
@@ -238,6 +246,11 @@ messages if you choose verbose output
 List responses
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{AsyncVaried$responses()}\if{html}{\out{</div>}}
+}
+
+\subsection{Details}{
+An S3 print method is used to summarise results. \link{unclass}
+the output to see the list, or index to results, e.g., \verb{[1]}, \verb{[1:3]}
 }
 
 \subsection{Returns}{

@@ -6,6 +6,7 @@
 #' @export
 #' @family async
 #' @template async-deets
+#' @template r6
 #' @return An object of class `AsyncVaried` with variables and methods.
 #' [HttpResponse] objects are returned in the order they are passed in. 
 #' We print the first 10.
@@ -170,8 +171,10 @@ AsyncVaried <- R6::R6Class(
     #' @description List responses
     #' @return a list of `HttpResponse` objects, empty list before
     #' requests made
+    #' @details An S3 print method is used to summarise results. [unclass]
+    #' the output to see the list, or index to results, e.g., `[1]`, `[1:3]`
     responses = function() {
-      private$output %||% list()
+      structure(private$output %||% list(), class="asyncresponses")
     },
 
     #' @description List requests
@@ -318,4 +321,14 @@ make_async_error <- function(x, req) {
   list(url = req$url$url, status_code = 0, headers = raw(0), 
     modified = NA_character_, times = NA_character_, 
     content = charToRaw(x))
+}
+
+#' @export
+print.asyncresponses <- function(x, ...) {
+  cat("async responses", sep="\n")
+  cat(sprintf("status code - url (N=%s; printing up to 10)", length(x)), sep="\n")
+  if (length(x) == 0) cat("  empty", sep="\n")
+  for (i in seq_len(min(c(10, length(x))))) {
+    cat(sprintf("  %s - %s", x[[i]]$status_code, x[[i]]$url), sep="\n")
+  }
 }

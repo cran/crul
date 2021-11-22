@@ -3,6 +3,7 @@
 #'
 #' @export
 #' @template args
+#' @template r6
 #' @param path URL path, appended to the base URL
 #' @param query query terms, as a named list. any numeric values are
 #' passed through [format()] to prevent larger numbers from being
@@ -522,6 +523,10 @@ HttpClient <- R6::R6Class(
         headers <- list()
       } else {
         hh <- rawToChar(resp$headers %||% raw(0))
+        if (!validEnc(hh)) {
+          Encoding(hh) <- "latin1"
+          if (!validEnc(hh)) stop("Headers aren't encoded in UTF-8 or Latin1")
+        }
         if (is.null(hh) || nchar(hh) == 0) {
           headers <- list()
         } else {
