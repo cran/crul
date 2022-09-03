@@ -31,13 +31,14 @@ document.addEventListener('DOMContentLoaded', function(e) {
 </script>
 
 <style type="text/css">
-  code{white-space: pre-wrap;}
-  span.smallcaps{font-variant: small-caps;}
-  span.underline{text-decoration: underline;}
-  div.column{display: inline-block; vertical-align: top; width: 50%;}
-  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
-  ul.task-list{list-style: none;}
-    </style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
 
 
 
@@ -242,7 +243,8 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 
 
-<p>There are a number of different crul classes that do HTTP requests. The following table compares features across the classes.</p>
+<p>There are a number of different crul classes that do HTTP requests.
+The following table compares features across the classes.</p>
 <table>
 <colgroup>
 <col width="25%" />
@@ -287,7 +289,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <td>AsyncVaried</td>
 <td>all except retry</td>
 <td>yes</td>
-<td><a href="https://docs.ropensci.org/ropenaq/">ropenaq</a>,<a href="https://docs.ropensci.org/rcrossref/">rcrossref</a>,<a href="https://docs.ropensci.org/taxize/">taxize</a>,<a href="https://docs.ropensci.org/rcitoid/">rcitoid</a>,<a href="https://cran.r-project.org/package=mstrio">mstrio</a></td>
+<td><a href="https://docs.ropensci.org/rcrossref/">rcrossref</a>,<a href="https://docs.ropensci.org/taxize/">taxize</a>,<a href="https://docs.ropensci.org/rcitoid/">rcitoid</a>,<a href="https://cran.r-project.org/package=mstrio">mstrio</a></td>
 </tr>
 <tr class="even">
 <td>AsyncQueue</td>
@@ -297,19 +299,51 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 </tr>
 </tbody>
 </table>
-<p><strong>HttpClient</strong> is the main class for doing synchronous HTTP requests. It supports all HTTP verbs including retry. It was the first class in this package. See also <code>crul::ok()</code>, which builds on this class.</p>
-<p><strong>Paginator</strong> is a class for automating pagination. It requires an instance of <code>HttpClient</code> as it’s first parameter. It does not handle asynchronous requests at this time, but may in the future. <code>Paginator</code> may be the right class to use when you don’t know the total number of results. Beware however, that if there are A LOT of results (and a lot depends on your internet speed and the server response time) the requests may take a long time to finish - just plan wisely to fit your needs.</p>
-<p><strong>ok</strong> is a convienence function light wrapper around <code>HttpClient</code>. It’s use case is for determining if a URL is “up”, or “okay”. You don’t have to instantiate an R6 class as you do with the other classes discussed here, but you can pass an <code>HttpClient</code> class to it if you like.</p>
-<p>With <strong>Async</strong> you can make HTTP requests in parallel. <code>Async</code> does not at this time support retry. It’s targeted at the use case where you don’t mind having request settings the same for all requests - you just pass in any number of URLs and all requests get the same headers, auth, curl options applied, if any.</p>
-<p><strong>AsyncVaried</strong> allows you to customize each request using <code>HttpRequest</code> (See below); that is, every HTTP request run asynchronously can have its own curl options, headers, etc.</p>
-<p><strong>AsyncQueue</strong> is the newest class, inheriting from <code>AsyncVaried</code>, introduced in curl v1. The motivation behind this class is: sometimes you may want to do HTTP requests in parallel, but there’s rate limiting or some other reason to want to not simply send off all requests immediately. <code>AsyncQueue</code> sets up a queue, splitting up requests into buckets, and executes requests based on a <code>sleep</code> or <code>req_per_min</code> (requests per minute) setting.</p>
+<p><strong>HttpClient</strong> is the main class for doing synchronous
+HTTP requests. It supports all HTTP verbs including retry. It was the
+first class in this package. See also <code>crul::ok()</code>, which
+builds on this class.</p>
+<p><strong>Paginator</strong> is a class for automating pagination. It
+requires an instance of <code>HttpClient</code> as it’s first parameter.
+It does not handle asynchronous requests at this time, but may in the
+future. <code>Paginator</code> may be the right class to use when you
+don’t know the total number of results. Beware however, that if there
+are A LOT of results (and a lot depends on your internet speed and the
+server response time) the requests may take a long time to finish - just
+plan wisely to fit your needs.</p>
+<p><strong>ok</strong> is a convienence function light wrapper around
+<code>HttpClient</code>. It’s use case is for determining if a URL is
+“up”, or “okay”. You don’t have to instantiate an R6 class as you do
+with the other classes discussed here, but you can pass an
+<code>HttpClient</code> class to it if you like.</p>
+<p>With <strong>Async</strong> you can make HTTP requests in parallel.
+<code>Async</code> does not at this time support retry. It’s targeted at
+the use case where you don’t mind having request settings the same for
+all requests - you just pass in any number of URLs and all requests get
+the same headers, auth, curl options applied, if any.</p>
+<p><strong>AsyncVaried</strong> allows you to customize each request
+using <code>HttpRequest</code> (See below); that is, every HTTP request
+run asynchronously can have its own curl options, headers, etc.</p>
+<p><strong>AsyncQueue</strong> is the newest class, inheriting from
+<code>AsyncVaried</code>, introduced in curl v1. The motivation behind
+this class is: sometimes you may want to do HTTP requests in parallel,
+but there’s rate limiting or some other reason to want to not simply
+send off all requests immediately. <code>AsyncQueue</code> sets up a
+queue, splitting up requests into buckets, and executes requests based
+on a <code>sleep</code> or <code>req_per_min</code> (requests per
+minute) setting.</p>
 <div id="httprequest" class="section level2">
 <h2>HttpRequest</h2>
-<p><code>HttpRequest</code> is related here, but not in the table above because it doesn’t do actual HTTP requests, but is used to build HTTP requests to pass in to <code>AsyncVaried</code>. The simplified class <code>Async</code> relative to <code>AsyncVaried</code> uses <code>HttpRequest</code> internally to build requests.</p>
+<p><code>HttpRequest</code> is related here, but not in the table above
+because it doesn’t do actual HTTP requests, but is used to build HTTP
+requests to pass in to <code>AsyncVaried</code>. The simplified class
+<code>Async</code> relative to <code>AsyncVaried</code> uses
+<code>HttpRequest</code> internally to build requests.</p>
 </div>
 <div id="more-async" class="section level2">
 <h2>More Async</h2>
-<p>See the <a href="async.html">async with crul</a> vignette for more details on asynchronous requests.</p>
+<p>See the <a href="async.html">async with crul</a> vignette for more
+details on asynchronous requests.</p>
 </div>
 
 
