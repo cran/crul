@@ -8,16 +8,16 @@
 #' @template async-deets
 #' @template r6
 #' @return An object of class `AsyncVaried` with variables and methods.
-#' [HttpResponse] objects are returned in the order they are passed in. 
+#' [HttpResponse] objects are returned in the order they are passed in.
 #' We print the first 10.
 #' @examples \dontrun{
 #' # pass in requests via ...
 #' req1 <- HttpRequest$new(
-#'   url = "https://httpbin.org/get",
+#'   url = "https://hb.opencpu.org/get",
 #'   opts = list(verbose = TRUE),
 #'   headers = list(foo = "bar")
 #' )$get()
-#' req2 <- HttpRequest$new(url = "https://httpbin.org/post")$post()
+#' req2 <- HttpRequest$new(url = "https://hb.opencpu.org/post")$post()
 #'
 #' # Create an AsyncVaried object
 #' out <- AsyncVaried$new(req1, req2)
@@ -46,15 +46,15 @@
 #' out$parse()
 #' ## response objects
 #' out$responses()
-#' 
+#'
 #' # use $verb() method to select http verb
 #' method <- "post"
 #' req1 <- HttpRequest$new(
-#'   url = "https://httpbin.org/post",
+#'   url = "https://hb.opencpu.org/post",
 #'   opts = list(verbose = TRUE),
 #'   headers = list(foo = "bar")
 #' )$verb(method)
-#' req2 <- HttpRequest$new(url = "https://httpbin.org/post")$verb(method)
+#' req2 <- HttpRequest$new(url = "https://hb.opencpu.org/post")$verb(method)
 #' out <- AsyncVaried$new(req1, req2)
 #' out
 #' out$request()
@@ -62,15 +62,15 @@
 #'
 #' # pass in requests in a list via .list param
 #' reqlist <- list(
-#'   HttpRequest$new(url = "https://httpbin.org/get")$get(),
-#'   HttpRequest$new(url = "https://httpbin.org/post")$post(),
-#'   HttpRequest$new(url = "https://httpbin.org/put")$put(),
-#'   HttpRequest$new(url = "https://httpbin.org/delete")$delete(),
-#'   HttpRequest$new(url = "https://httpbin.org/get?g=5")$get(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/get")$get(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/post")$post(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/put")$put(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/delete")$delete(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/get?g=5")$get(),
 #'   HttpRequest$new(
-#'     url = "https://httpbin.org/post")$post(body = list(y = 9)),
+#'     url = "https://hb.opencpu.org/post")$post(body = list(y = 9)),
 #'   HttpRequest$new(
-#'     url = "https://httpbin.org/get")$get(query = list(hello = "world"))
+#'     url = "https://hb.opencpu.org/get")$get(query = list(hello = "world"))
 #' )
 #'
 #' out <- AsyncVaried$new(.list = reqlist)
@@ -80,9 +80,9 @@
 #' out$content()
 #' out$times()
 #' out$parse()
-#' 
+#'
 #' # using auth with async
-#' url <- "https://httpbin.org/basic-auth/user/passwd"
+#' url <- "https://hb.opencpu.org/basic-auth/user/passwd"
 #' auth <- auth(user = "user", pwd = "passwd")
 #' reqlist <- list(
 #'   HttpRequest$new(url = url, auth = auth)$get(),
@@ -93,20 +93,20 @@
 #' out$request()
 #' out$status()
 #' out$parse()
-#' 
+#'
 #' # failure behavior
 #' ## e.g. when a URL doesn't exist, a timeout, etc.
 #' reqlist <- list(
 #'   HttpRequest$new(url = "http://stuffthings.gvb")$get(),
-#'   HttpRequest$new(url = "https://httpbin.org")$head(),
-#'   HttpRequest$new(url = "https://httpbin.org", 
+#'   HttpRequest$new(url = "https://hb.opencpu.org")$head(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org",
 #'    opts = list(timeout_ms = 10))$head()
 #' )
 #' (tmp <- AsyncVaried$new(.list = reqlist))
 #' tmp$request()
 #' tmp$responses()
 #' tmp$parse("UTF-8")
-#' 
+#'
 #' # access intemediate redirect headers
 #' dois <- c("10.7202/1045307ar", "10.1242/jeb.088898", "10.1121/1.3383963")
 #' reqlist <- list(
@@ -118,10 +118,23 @@
 #' tmp$request()
 #' tmp
 #' lapply(tmp$responses(), "[[", "response_headers_all")
+#'
+#' # retry
+#' reqlist <- list(
+#'   HttpRequest$new(url = "https://hb.opencpu.org/get")$get(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/post")$post(),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/status/404")$retry("get"),
+#'   HttpRequest$new(url = "https://hb.opencpu.org/status/429")$retry("get",
+#'    retry_only_on = c(403, 429), times = 2)
+#' )
+#' tmp <- AsyncVaried$new(.list = reqlist)
+#' tmp
+#' tmp$request()
+#' tmp$responses()[[3]]
 #' }
 AsyncVaried <- R6::R6Class(
   "AsyncVaried",
-  public = list(    
+  public = list(
     #' @description print method for AsyncVaried objects
     #' @param x self
     #' @param ... ignored
@@ -130,8 +143,9 @@ AsyncVaried <- R6::R6Class(
       cat(sprintf("  requests: (n: %s)", length(private$reqs)), sep = "\n")
       print_urls <- private$reqs[1:min(c(length(private$reqs), 10))]
       for (i in seq_along(print_urls)) {
+        retry_note <- if ("retry_options" %in% names(print_urls[[i]]$payload)) " (retry)" else ""
         cat(sprintf("   %s: %s",
-                    print_urls[[i]]$payload$method,
+                    paste0(print_urls[[i]]$payload$method, retry_note),
                     print_urls[[i]]$url), "\n")
       }
       if (length(private$reqs) > 10) {
@@ -224,6 +238,49 @@ AsyncVaried <- R6::R6Class(
     output = NULL,
 
     async_request = function(reqs) {
+      retry <- function(i, handle, pause_base, pause_cap, pause_min, times,
+        terminate_on, retry_only_on, onwait)
+      {
+        curl::multi_add(handle, pool = crulpool, done = function(res) {
+          if (
+            (res$status_code >= 400) &&
+            (! res$status_code %in% terminate_on) &&
+            (is.null(retry_only_on) || res$status_code %in% retry_only_on) &&
+            (times > 0) &&
+            (pause_base < pause_cap)
+          ) {
+            rh <- res$response_headers
+            if (! is.null(rh[["retry-after"]])) {
+              wait_time <- as.numeric(rh[["retry-after"]])
+            } else if (identical(rh[["x-ratelimit-remaining"]], "0") &&
+                       !is.null(rh[["x-ratelimit-reset"]])) {
+              wait_time <- max(0, as.numeric(rh[["x-ratelimit-reset"]]) -
+                as.numeric(Sys.time()))
+            } else {
+              if (is.null(pause_min)) pause_min <- pause_base
+              # exponential backoff with full jitter
+              wait_time <- stats::runif(1,
+                                       min = pause_min,
+                                       max = min(pause_base * 2, pause_cap))
+            }
+            if (! (wait_time > pause_cap)) {
+              if (is.function(onwait)) onwait(res, wait_time)
+              Sys.sleep(wait_time)
+              retry(i, handle,
+                    pause_base = pause_base * 2,
+                    pause_cap = pause_cap,
+                    pause_min = pause_min,
+                    times = times - 1,
+                    terminate_on = terminate_on,
+                    retry_only_on = retry_only_on,
+                    onwait = onwait)
+            }
+          } else {
+            multi_res[[i]] <<- res
+          }
+        })
+      }
+
       crulpool <- curl::new_pool()
       multi_res <- list()
 
@@ -236,7 +293,9 @@ AsyncVaried <- R6::R6Class(
         }
         curl::handle_setheaders(h, .list = w$headers)
 
-        if (is.null(w$disk) && is.null(w$stream)) {
+        if ("retry_options" %in% names(w)) {
+          do.call(retry, c(list(i=i, handle=h), w$retry_options))
+        } else if (is.null(w$disk) && is.null(w$stream)) {
           curl::multi_add(
             handle = h,
             done = function(res) multi_res[[i]] <<- res,
@@ -277,7 +336,6 @@ AsyncVaried <- R6::R6Class(
 
       for (i in seq_along(reqs)) make_request(i)
 
-      # run all requests
       curl::multi_run(pool = crulpool)
       remain <- curl::multi_list(crulpool)
       if (length(remain)) lapply(remain, curl::multi_cancel)
@@ -318,8 +376,8 @@ AsyncVaried <- R6::R6Class(
 )
 
 make_async_error <- function(x, req) {
-  list(url = req$url$url, status_code = 0, headers = raw(0), 
-    modified = NA_character_, times = NA_character_, 
+  list(url = req$url$url, status_code = 0, headers = raw(0),
+    modified = NA_character_, times = NA_character_,
     content = charToRaw(x))
 }
 

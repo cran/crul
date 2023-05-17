@@ -14,7 +14,7 @@
 #' It is tempting to think of resource identifiers as remote file system
 #' pathnames and of representations as being a copy of the contents of
 #' such files.  In fact, that is how many resources are implemented (see
-#' Section 9.1 (<https://tools.ietf.org/html/rfc7231#section-9.1>) 
+#' Section 9.1 (<https://datatracker.ietf.org/doc/html/rfc7231#section-9.1>) 
 #' for related security considerations).  However, there are
 #' no such limitations in practice.  The HTTP interface for a resource
 #' is just as likely to be implemented as a tree of content objects, a
@@ -31,7 +31,7 @@
 #' A client can alter the semantics of GET to be a "range request",
 #' requesting transfer of only some part(s) of the selected
 #' representation, by sending a Range header field in the request
-#' (RFC7233: <https://tools.ietf.org/html/rfc7233>).
+#' (RFC7233: <https://datatracker.ietf.org/doc/html/rfc7233>).
 #' 
 #' A payload within a GET request message has no defined semantics;
 #' sending a payload body on a GET request might cause some existing
@@ -40,17 +40,17 @@
 #' The response to a GET request is cacheable; a cache MAY use it to
 #' satisfy subsequent GET and HEAD requests unless otherwise indicated
 #' by the Cache-Control header field (Section 5.2 of RFC7234:
-#' <https://tools.ietf.org/html/rfc7234#section-5.2>).
+#' <https://datatracker.ietf.org/doc/html/rfc7234#section-5.2>).
 #' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' x$get(path = 'get')
 #' }
 #'
 #' @name verb-GET
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc7231#section-4.3.1>
+#' @references <https://datatracker.ietf.org/doc/html/rfc7231#section-4.3.1>
 NULL
 
 #' HTTP verb info: POST
@@ -63,15 +63,12 @@ NULL
 #' result of successfully processing a POST request, the origin server
 #' SHOULD send a 201 (Created) response containing a Location header
 #' field that provides an identifier for the primary resource created
-#' (Section 7.1.2 <https://tools.ietf.org/html/rfc7231#section-7.1.2>) 
+#' (Section 7.1.2 <https://datatracker.ietf.org/doc/html/rfc7231#section-7.1.2>) 
 #' and a representation that describes the status of the
 #' request while referring to the new resource(s).
-#'  
-#' See <https://tools.ietf.org/html/rfc7231#section-4.3.3> for further
-#' details.
 #' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' 
 #' # a named list
 #' x$post(path='post', body = list(hello = "world"))
@@ -109,7 +106,7 @@ NULL
 #' @name verb-POST
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc7231#section-4.3.3>
+#' @references <https://datatracker.ietf.org/doc/html/rfc7231#section-4.3.3>
 NULL
 
 #' HTTP verb info: PUT
@@ -139,19 +136,16 @@ NULL
 #' representation, then the origin server MUST send either a 200 (OK) or
 #' a 204 (No Content) response to indicate successful completion of the
 #' request.
-#'  
-#' See <https://tools.ietf.org/html/rfc7231#section-4.3.4> for further
-#' details.
 #' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' x$put(path = 'put', body = list(foo = "bar"))
 #' }
 #'
 #' @name verb-PUT
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc7231#section-4.3.4>
+#' @references <https://datatracker.ietf.org/doc/html/rfc7231#section-4.3.4>
 NULL
 
 #' HTTP verb info: PATCH
@@ -166,19 +160,16 @@ NULL
 #' point to an existing resource, the server MAY create a new resource,
 #' depending on the patch document type (whether it can logically modify
 #' a null resource) and permissions, etc.
-#'  
-#' See <https://tools.ietf.org/html/rfc5789#section-2> for further
-#' details.
 #' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' x$patch(path = 'patch', body = list(hello = "mars"))
 #' }
 #'
 #' @name verb-PATCH
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc5789>
+#' @references <https://datatracker.ietf.org/doc/html/rfc5789>
 NULL
 
 #' HTTP verb info: DELETE
@@ -192,12 +183,9 @@ NULL
 #' in UNIX: it expresses a deletion operation on the URI mapping of the
 #' origin server rather than an expectation that the previously
 #' associated information be deleted.
-#'  
-#' See <https://tools.ietf.org/html/rfc7231#section-4.3.5> for further
-#' details.
 #' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' x$delete(path = 'delete')
 #' 
 #' ## a list
@@ -215,7 +203,7 @@ NULL
 #' @name verb-DELETE
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc7231#section-4.3.5>
+#' @references <https://datatracker.ietf.org/doc/html/rfc7231#section-4.3.5>
 NULL
 
 #' HTTP verb info: HEAD
@@ -235,16 +223,13 @@ NULL
 #' testing hypertext links for validity, accessibility, and recent 
 #' modification.
 #' 
-#' See <https://tools.ietf.org/html/rfc7231#section-4.3.2> for further
-#' details.
-#' 
 #' @examples \dontrun{
-#' x <- HttpClient$new(url = "https://httpbin.org")
+#' x <- HttpClient$new(url = "https://hb.opencpu.org")
 #' x$head()
 #' }
 #'
 #' @name verb-HEAD
 #' @family verbs
 #' @seealso [crul-package]
-#' @references <https://tools.ietf.org/html/rfc7231#section-4.3.2>
+#' @references <https://datatracker.ietf.org/doc/html/rfc7231#section-4.3.2>
 NULL

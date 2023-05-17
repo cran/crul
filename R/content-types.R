@@ -26,14 +26,14 @@
 #'
 #' @references
 #' spec for content types:
-#' <https://tools.ietf.org/html/rfc7231#section-3.1.1.5>
+#' <https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.5>
 #'
 #' spec for media types:
-#' <https://tools.ietf.org/html/rfc7231#section-3.1.1.1>
+#' <https://datatracker.ietf.org/doc/html/rfc7231#section-3.1.1.1>
 #'
 #' @seealso [HttpResponse]
 #' @examples \dontrun{
-#' (x <- HttpClient$new(url = "https://httpbin.org"))
+#' (x <- HttpClient$new(url = "https://hb.opencpu.org"))
 #' (res <- x$get())
 #'
 #' ## see the content type

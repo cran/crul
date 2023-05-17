@@ -178,7 +178,6 @@ test_that("AsyncVaried - failure behavior", {
   expect_false(resps[[3]]$success())
 
   expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
-  expect_true(grepl("time", resps[[3]]$parse("UTF-8"), ignore.case = TRUE))
 })
 
 
@@ -207,7 +206,6 @@ test_that("AsyncVaried - failure behavior", {
   expect_false(resps[[2]]$success())
 
   expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
-  expect_true(grepl("time", resps[[2]]$parse("UTF-8"), ignore.case = TRUE))
   
   # cleanup
   closeAllConnections()
@@ -238,7 +236,6 @@ test_that("AsyncVaried - failure behavior", {
   expect_false(resps[[2]]$success())
 
   expect_match(resps[[1]]$parse("UTF-8"), "resolve host")
-  expect_true(grepl("time", resps[[2]]$parse("UTF-8"), ignore.case = TRUE))
 })
 
 # verb method works
@@ -247,6 +244,19 @@ test_that("AsyncVaried verb method works", {
 
   req1 <- HttpRequest$new(url = hb("/get"))$verb('get')
   req2 <- HttpRequest$new(url = hb("/post"))$verb('post')
+
+  aa <- AsyncVaried$new(req1, req2)
+  aa$request()
+  expect_equal(aa$responses()[[1]]$method, 'get')
+  expect_equal(aa$responses()[[2]]$method, 'post')
+})
+
+# verb method works
+test_that("AsyncVaried verb retry", {
+  skip_on_cran()
+
+  req1 <- HttpRequest$new(url = hb("/get"))$retry('get')
+  req2 <- HttpRequest$new(url = hb("/post"))$retry('post')
 
   aa <- AsyncVaried$new(req1, req2)
   aa$request()

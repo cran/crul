@@ -12,7 +12,7 @@
 
 <meta name="author" content="Scott Chamberlain" />
 
-<meta name="date" content="2021-08-16" />
+<meta name="date" content="2023-05-10" />
 
 <title>5. API package best practices</title>
 
@@ -121,13 +121,20 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; }
   for (var i = 0; i < sheets.length; i++) {
     if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
     try { var rules = sheets[i].cssRules; } catch (e) { continue; }
-    for (var j = 0; j < rules.length; j++) {
+    var j = 0;
+    while (j < rules.length) {
       var rule = rules[j];
       // check if there is a div.sourceCode rule
-      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") continue;
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
       var style = rule.style.cssText;
       // check if color or background-color is set
-      if (rule.style.color === '' && rule.style.backgroundColor === '') continue;
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
       // replace div.sourceCode by a pre.sourceCode rule
       sheets[i].deleteRule(j);
       sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
@@ -333,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">5. API package best practices</h1>
 <h4 class="author">Scott Chamberlain</h4>
-<h4 class="date">2021-08-16</h4>
+<h4 class="date">2023-05-10</h4>
 
 
 
@@ -349,24 +356,24 @@ in scripts or an R package.</p>
 <code>Imports</code> in your <code>DESCRIPTION</code> file, and add an
 entry like <code>@importFrom crul HttpClient</code> somewhere in your
 package documentation, for example:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; Some function</span></span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; </span></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @export</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; @importFrom crul HttpClient</span></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&#39; ...</span></span></code></pre></div>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co">#&#39; Some function</span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&#39; </span></span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&#39; @export</span></span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&#39; @importFrom crul HttpClient</span></span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&#39; ...</span></span></code></pre></div>
 </div>
 <div id="http-request-function" class="section level2">
 <h2>HTTP request function</h2>
 <p>If you have more than one function that needs to make an HTTP request
 it’s probably useful to have a function for doing HTTP requests. The
 following is an example of a function.</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>xGET <span class="ot">&lt;-</span> <span class="cf">function</span>(url, path, <span class="at">args =</span> <span class="fu">list</span>(), ...) {</span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  cli <span class="ot">&lt;-</span> crul<span class="sc">::</span>HttpClient<span class="sc">$</span><span class="fu">new</span>(url, <span class="at">opts =</span> <span class="fu">list</span>(...))</span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  res <span class="ot">&lt;-</span> cli<span class="sc">$</span><span class="fu">get</span>(<span class="at">path =</span> path, <span class="at">query =</span> args)</span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">raise_for_status</span>()</span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">raise_for_ct_json</span>()</span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">parse</span>(<span class="st">&quot;UTF-8&quot;</span>)</span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>xGET <span class="ot">&lt;-</span> <span class="cf">function</span>(url, path, <span class="at">args =</span> <span class="fu">list</span>(), ...) {</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a>  cli <span class="ot">&lt;-</span> crul<span class="sc">::</span>HttpClient<span class="sc">$</span><span class="fu">new</span>(url, <span class="at">opts =</span> <span class="fu">list</span>(...))</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  res <span class="ot">&lt;-</span> cli<span class="sc">$</span><span class="fu">get</span>(<span class="at">path =</span> path, <span class="at">query =</span> args)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">raise_for_status</span>()</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">raise_for_ct_json</span>()</span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  res<span class="sc">$</span><span class="fu">parse</span>(<span class="st">&quot;UTF-8&quot;</span>)</span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>}</span></code></pre></div>
 <p>There’s some features to note in the above function:</p>
 <ul>
 <li><code>url</code>: this really depends on your setup. In some cases
@@ -382,13 +389,13 @@ pass <code>args</code> in cases where no query args are needed.</li>
 discussion below.</li>
 </ul>
 <p>You can use the function like:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">xGET</span>(<span class="st">&quot;https://httpbin.org&quot;</span>, <span class="st">&quot;get&quot;</span>, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">foo =</span> <span class="st">&quot;bar&quot;</span>))</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># parse the JSON to a list</span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>jsonlite<span class="sc">::</span><span class="fu">fromJSON</span>(x)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># more parsing</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="fu">xGET</span>(<span class="st">&quot;https://hb.opencpu.org&quot;</span>, <span class="st">&quot;get&quot;</span>, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">foo =</span> <span class="st">&quot;bar&quot;</span>))</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co"># parse the JSON to a list</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>jsonlite<span class="sc">::</span><span class="fu">fromJSON</span>(x)</span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co"># more parsing</span></span></code></pre></div>
 <p>Because we used an ellipsis, anyone can pass in curl options
 like:</p>
-<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">xGET</span>(<span class="st">&quot;https://xxx.org&quot;</span>, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">foo =</span> <span class="st">&quot;bar&quot;</span>), <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="fu">xGET</span>(<span class="st">&quot;https://xxx.org&quot;</span>, <span class="at">args =</span> <span class="fu">list</span>(<span class="at">foo =</span> <span class="st">&quot;bar&quot;</span>), <span class="at">verbose =</span> <span class="cn">TRUE</span>)</span></code></pre></div>
 <p>Curl options are important for digging into the details of HTTP
 requests, and go a long way towards users being able to sort out their
 own problems, and help you diagnose problems as well.</p>
@@ -398,7 +405,7 @@ line, or with another function, parse results as needed.</p>
 </div>
 <div id="failing-with-fauxpas" class="section level2">
 <h2>Failing with fauxpas</h2>
-<p><a href="https://github.com/ropensci/fauxpas">fauxpas</a> is in
+<p><a href="https://github.com/sckott/fauxpas">fauxpas</a> is in
 Suggests in this package. If you don’t have it installed, no worries,
 but if you do have it installed, we use fauxpas.</p>
 <p>There is not much difference with the default
@@ -407,46 +414,46 @@ it.</p>
 <p>However, you can construct your own replacement with fauxpas that
 gives you more flexibility in how you deal with HTTP status codes.</p>
 <p>First, make an HTTP request:</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>con <span class="ot">&lt;-</span> HttpClient<span class="sc">$</span><span class="fu">new</span>(<span class="st">&quot;https://httpbin.org/status/404&quot;</span>)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>res <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">get</span>()</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>con <span class="ot">&lt;-</span> HttpClient<span class="sc">$</span><span class="fu">new</span>(<span class="st">&quot;https://hb.opencpu.org/status/404&quot;</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>res <span class="ot">&lt;-</span> con<span class="sc">$</span><span class="fu">get</span>()</span></code></pre></div>
 <p>Then use <code>fauxpas::find_error_class</code> to get the correct R6
 error class for the status code, in this case <code>404</code></p>
-<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> fauxpas<span class="sc">::</span><span class="fu">find_error_class</span>(res<span class="sc">$</span>status_code)<span class="sc">$</span><span class="fu">new</span>()</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; &lt;HTTPNotFound&gt;</span></span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  behavior: stop</span></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  message_template: {{reason}} (HTTP {{status}})</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  message_template_verbose: {{reason}} (HTTP {{status}}).\n - {{message}}</span></span></code></pre></div>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>x <span class="ot">&lt;-</span> fauxpas<span class="sc">::</span><span class="fu">find_error_class</span>(res<span class="sc">$</span>status_code)<span class="sc">$</span><span class="fu">new</span>()</span>
+<span id="cb6-2"><a href="#cb6-2" tabindex="-1"></a><span class="co">#&gt; &lt;HTTPNotFound&gt;</span></span>
+<span id="cb6-3"><a href="#cb6-3" tabindex="-1"></a><span class="co">#&gt;  behavior: stop</span></span>
+<span id="cb6-4"><a href="#cb6-4" tabindex="-1"></a><span class="co">#&gt;  message_template: {{reason}} (HTTP {{status}})</span></span>
+<span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  message_template_verbose: {{reason}} (HTTP {{status}}).\n - {{message}}</span></span></code></pre></div>
 <p>We can then do one of two things: use <code>$do()</code> or
 <code>$do_verbose()</code>. <code>$do()</code> is simpler and gives you
 thhe same thing <code>$raise_for_status()</code> gives, but allows you
 to change behavior (stop vs. warning vs. message), and how the message
 is formatted. By default we get:</p>
-<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: Not Found (HTTP 404)</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; Error: Not Found (HTTP 404)</span></span></code></pre></div>
 <p>We can change the template using <code>whisker</code> templating</p>
-<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res, <span class="at">template =</span> <span class="st">&quot;{{status}}</span><span class="sc">\n</span><span class="st">  --&gt; {{reason}}&quot;</span>)</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: 404</span></span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  --&gt; Not Found</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res, <span class="at">template =</span> <span class="st">&quot;{{status}}</span><span class="sc">\n</span><span class="st">  --&gt; {{reason}}&quot;</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" tabindex="-1"></a><span class="co">#&gt; Error: 404</span></span>
+<span id="cb8-3"><a href="#cb8-3" tabindex="-1"></a><span class="co">#&gt;  --&gt; Not Found</span></span></code></pre></div>
 <p><code>$do_verbose()</code> gives you a lot more detail about the
 status code, possibly more than you want:</p>
-<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do_verbose</span>(res)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error: Not Found (HTTP 404).</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - The server has not found anything matching the Request-URI. No indication</span></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  is given of whether the condition is temporary or permanent. The 410 (Gone)</span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  status code SHOULD be used if the server knows, through some internally configurable</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  mechanism, that an old resource is permanently unavailable and has no forwarding</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  address. This status code is commonly used when the server does not wish to</span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  reveal exactly why the request has been refused, or when no other response</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; is applicable.</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do_verbose</span>(res)</span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; Error: Not Found (HTTP 404).</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt;  - The server has not found anything matching the Request-URI. No indication</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt;  is given of whether the condition is temporary or permanent. The 410 (Gone)</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt;  status code SHOULD be used if the server knows, through some internally configurable</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;  mechanism, that an old resource is permanently unavailable and has no forwarding</span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt;  address. This status code is commonly used when the server does not wish to</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt;  reveal exactly why the request has been refused, or when no other response</span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; is applicable.</span></span></code></pre></div>
 <p>You can change behavior to either <code>warning</code> or
 <code>message</code>:</p>
-<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span>behavior <span class="ot">&lt;-</span> <span class="st">&quot;warning&quot;</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning message:</span></span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not Found (HTTP 404)</span></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span>behavior <span class="ot">&lt;-</span> <span class="st">&quot;message&quot;</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Not Found (HTTP 404)</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" tabindex="-1"></a>x<span class="sc">$</span>behavior <span class="ot">&lt;-</span> <span class="st">&quot;warning&quot;</span></span>
+<span id="cb10-2"><a href="#cb10-2" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
+<span id="cb10-3"><a href="#cb10-3" tabindex="-1"></a><span class="co">#&gt; Warning message:</span></span>
+<span id="cb10-4"><a href="#cb10-4" tabindex="-1"></a><span class="co">#&gt; Not Found (HTTP 404)</span></span>
+<span id="cb10-5"><a href="#cb10-5" tabindex="-1"></a>x<span class="sc">$</span>behavior <span class="ot">&lt;-</span> <span class="st">&quot;message&quot;</span></span>
+<span id="cb10-6"><a href="#cb10-6" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
+<span id="cb10-7"><a href="#cb10-7" tabindex="-1"></a><span class="co">#&gt; Not Found (HTTP 404)</span></span></code></pre></div>
 </div>
 <div id="retrying-requests" class="section level2">
 <h2>Retrying requests</h2>
@@ -493,22 +500,22 @@ packages: <a href="https://github.com/ropensci/crul">crul</a> and <a href="https
 exists). In that file use the following lines to setup your path for
 storing cassettes (change path to whatever you want):</li>
 </ol>
-<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;vcr&quot;</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">invisible</span>(vcr<span class="sc">::</span><span class="fu">vcr_configure</span>())</span></code></pre></div>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">library</span>(<span class="st">&quot;vcr&quot;</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" tabindex="-1"></a><span class="fu">invisible</span>(vcr<span class="sc">::</span><span class="fu">vcr_configure</span>())</span></code></pre></div>
 <ol start="3" style="list-style-type: decimal">
 <li>In your tests, for whichever tests you want to use <code>vcr</code>,
 wrap the tests in a <code>vcr::use_cassette()</code> call like:</li>
 </ol>
-<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(testthat)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;my test&quot;</span>, {</span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  vcr<span class="sc">::</span><span class="fu">use_cassette</span>(<span class="st">&quot;rl_citation&quot;</span>, {</span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    aa <span class="ot">&lt;-</span> <span class="fu">rl_citation</span>()</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect_is</span>(aa, <span class="st">&quot;character&quot;</span>)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect_match</span>(aa, <span class="st">&quot;IUCN&quot;</span>)</span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">expect_match</span>(aa, <span class="st">&quot;www.iucnredlist.org&quot;</span>)</span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" tabindex="-1"></a><span class="fu">library</span>(testthat)</span>
+<span id="cb12-2"><a href="#cb12-2" tabindex="-1"></a><span class="fu">test_that</span>(<span class="st">&quot;my test&quot;</span>, {</span>
+<span id="cb12-3"><a href="#cb12-3" tabindex="-1"></a>  vcr<span class="sc">::</span><span class="fu">use_cassette</span>(<span class="st">&quot;rl_citation&quot;</span>, {</span>
+<span id="cb12-4"><a href="#cb12-4" tabindex="-1"></a>    aa <span class="ot">&lt;-</span> <span class="fu">rl_citation</span>()</span>
+<span id="cb12-5"><a href="#cb12-5" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" tabindex="-1"></a>    <span class="fu">expect_is</span>(aa, <span class="st">&quot;character&quot;</span>)</span>
+<span id="cb12-7"><a href="#cb12-7" tabindex="-1"></a>    <span class="fu">expect_match</span>(aa, <span class="st">&quot;IUCN&quot;</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" tabindex="-1"></a>    <span class="fu">expect_match</span>(aa, <span class="st">&quot;www.iucnredlist.org&quot;</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" tabindex="-1"></a>  })</span>
+<span id="cb12-10"><a href="#cb12-10" tabindex="-1"></a>})</span></code></pre></div>
 <p>That’s it! Just run your tests are you normally would and any HTTP
 requests done by <code>crul</code> or <code>httr</code> will be cached
 on the first test run then the cached responses used every time

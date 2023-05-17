@@ -24,13 +24,13 @@ See \code{\link[=HttpClient]{HttpClient()}} for information on parameters.
 
 This is an R6 class from the package \pkg{R6}. Find out more
 about R6 at \url{https://r6.r-lib.org/}. After creating an instance of an R6
-class (e.g., \code{x <- HttpClient$new(url = "https://httpbin.org")}) you can
+class (e.g., \code{x <- HttpClient$new(url = "https://hb.opencpu.org")}) you can
 access values and methods on the object \code{x}.
 }
 
 \examples{
 \dontrun{
-x <- HttpRequest$new(url = "https://httpbin.org/get")
+x <- HttpRequest$new(url = "https://hb.opencpu.org/get")
 ## note here how the HTTP method is shown on the first line to the right
 x$get()
 
@@ -39,26 +39,30 @@ z <- x$get()
 ### get the HTTP method
 z$method()
 
-(x <- HttpRequest$new(url = "https://httpbin.org/get")$get())
+(x <- HttpRequest$new(url = "https://hb.opencpu.org/get")$get())
 x$url
 x$payload
 
-(x <- HttpRequest$new(url = "https://httpbin.org/post"))
+(x <- HttpRequest$new(url = "https://hb.opencpu.org/post"))
 x$post(body = list(foo = "bar"))
 
 HttpRequest$new(
-  url = "https://httpbin.org/get",
+  url = "https://hb.opencpu.org/get",
   headers = list(
     `Content-Type` = "application/json"
   )
 )
+
+# retry
+(x <- HttpRequest$new(url = "https://hb.opencpu.org/post"))
+x$retry("post", body = list(foo = "bar"))
 }
 
 ## ------------------------------------------------
 ## Method `HttpRequest$verb`
 ## ------------------------------------------------
 
-z <- HttpRequest$new(url = "https://httpbin.org/get")
+z <- HttpRequest$new(url = "https://hb.opencpu.org/get")
 res <- z$verb('get', query = list(hello = "world"))
 res$payload
 }
@@ -104,6 +108,7 @@ Other async:
 \item \href{#method-HttpRequest-delete}{\code{HttpRequest$delete()}}
 \item \href{#method-HttpRequest-head}{\code{HttpRequest$head()}}
 \item \href{#method-HttpRequest-verb}{\code{HttpRequest$verb()}}
+\item \href{#method-HttpRequest-retry}{\code{HttpRequest$retry()}}
 \item \href{#method-HttpRequest-method}{\code{HttpRequest$method()}}
 \item \href{#method-HttpRequest-clone}{\code{HttpRequest$clone()}}
 }
@@ -404,7 +409,7 @@ postfields, postfieldsize, and customrequest}
 }
 \subsection{Examples}{
 \if{html}{\out{<div class="r example copy">}}
-\preformatted{z <- HttpRequest$new(url = "https://httpbin.org/get")
+\preformatted{z <- HttpRequest$new(url = "https://hb.opencpu.org/get")
 res <- z$verb('get', query = list(hello = "world"))
 res$payload
 }
@@ -412,6 +417,59 @@ res$payload
 
 }
 
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-HttpRequest-retry"></a>}}
+\if{latex}{\out{\hypertarget{method-HttpRequest-retry}{}}}
+\subsection{Method \code{retry()}}{
+Define a RETRY request
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{HttpRequest$retry(
+  verb,
+  ...,
+  pause_base = 1,
+  pause_cap = 60,
+  pause_min = 1,
+  times = 3,
+  terminate_on = NULL,
+  retry_only_on = NULL,
+  onwait = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{verb}}{an HTTP verb supported on this class: get,
+post, put, patch, delete, head. Also supports retry.}
+
+\item{\code{...}}{curl options, only those in the acceptable set from
+\code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
+postfields, postfieldsize, and customrequest}
+
+\item{\code{pause_base, pause_cap, pause_min}}{basis, maximum, and minimum for
+calculating wait time for retry. Wait time is calculated according to the
+exponential backoff with full jitter algorithm. Specifically, wait time is
+chosen randomly between \code{pause_min} and the lesser of \code{pause_base * 2} and
+\code{pause_cap}, with \code{pause_base} doubling on each subsequent retry attempt.
+Use \code{pause_cap = Inf} to not terminate retrying due to cap of wait time
+reached.}
+
+\item{\code{times}}{the maximum number of times to retry. Set to \code{Inf} to
+not stop retrying due to exhausting the number of attempts.}
+
+\item{\code{terminate_on, retry_only_on}}{a vector of HTTP status codes. For
+\code{terminate_on}, the status codes for which to terminate retrying, and for
+\code{retry_only_on}, the status codes for which to retry the request.}
+
+\item{\code{onwait}}{a callback function if the request will be retried and
+a wait time is being applied. The function will be passed two parameters,
+the response object from the failed request, and the wait time in seconds.
+Note that the time spent in the function effectively adds to the wait time,
+so it should be kept simple.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-HttpRequest-method"></a>}}
