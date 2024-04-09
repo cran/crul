@@ -12,7 +12,7 @@
 
 <meta name="author" content="Scott Chamberlain" />
 
-<meta name="date" content="2023-05-10" />
+<meta name="date" content="2023-05-23" />
 
 <title>5. API package best practices</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -62,7 +62,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">5. API package best practices</h1>
 <h4 class="author">Scott Chamberlain</h4>
-<h4 class="date">2023-05-10</h4>
+<h4 class="date">2023-05-23</h4>
 
 
 
@@ -357,7 +357,7 @@ in scripts or an R package.</p>
 entry like <code>@importFrom crul HttpClient</code> somewhere in your
 package documentation, for example:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="co">#&#39; Some function</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&#39; </span></span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="co">#&#39;</span></span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="co">#&#39; @export</span></span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="co">#&#39; @importFrom crul HttpClient</span></span>
 <span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a><span class="co">#&#39; ...</span></span></code></pre></div>
@@ -425,9 +425,9 @@ error class for the status code, in this case <code>404</code></p>
 <span id="cb6-5"><a href="#cb6-5" tabindex="-1"></a><span class="co">#&gt;  message_template_verbose: {{reason}} (HTTP {{status}}).\n - {{message}}</span></span></code></pre></div>
 <p>We can then do one of two things: use <code>$do()</code> or
 <code>$do_verbose()</code>. <code>$do()</code> is simpler and gives you
-thhe same thing <code>$raise_for_status()</code> gives, but allows you
-to change behavior (stop vs. warning vs. message), and how the message
-is formatted. By default we get:</p>
+the same thing <code>$raise_for_status()</code> gives, but allows you to
+change behavior (stop vs. warning vs. message), and how the message is
+formatted. By default we get:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>x<span class="sc">$</span><span class="fu">do</span>(res)</span>
 <span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; Error: Not Found (HTTP 404)</span></span></code></pre></div>
 <p>We can change the template using <code>whisker</code> templating</p>

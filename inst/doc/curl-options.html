@@ -12,7 +12,7 @@
 
 <meta name="author" content="Scott Chamberlain" />
 
-<meta name="date" content="2023-05-10" />
+<meta name="date" content="2024-04-09" />
 
 <title>4. curl options</title>
 
@@ -51,7 +51,7 @@ overflow: visible;
 </style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span { line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -62,7 +62,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -340,7 +340,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">4. curl options</h1>
 <h4 class="author">Scott Chamberlain</h4>
-<h4 class="date">2023-05-10</h4>
+<h4 class="date">2024-04-09</h4>
 
 
 
@@ -375,11 +375,11 @@ already have curl. Once you have curl, you can have lots of fun. For
 example, get the contents of the Google landing page:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">curl</span> https://www.google.com</span></code></pre></div>
 <ul>
-<li>If you like that you may also like <a href="https://github.com/httpie/httpie">httpie</a>, a Python command
-line tool that is a little more convenient than curl (e.g., JSON output
-is automatically parsed and colorized).</li>
+<li>If you like that you may also like <a href="https://github.com/httpie/cli">httpie</a>, a Python command line
+tool that is a little more convenient than curl (e.g., JSON output is
+automatically parsed and colorized).</li>
 <li>Alot of data from the web is in JSON format. A great command line
-tool to pair with <code>curl</code> is <a href="https://stedolan.github.io/jq/">jq</a>.</li>
+tool to pair with <code>curl</code> is <a href="https://jqlang.github.io/jq/">jq</a>.</li>
 </ul>
 <blockquote>
 <p>Note: if you are on windows you may require extra setup if you want
@@ -629,7 +629,7 @@ OR</li>
 <p>both result in the same thing</p>
 <p><em>Why use this?</em> This is set by default in a http request, as
 you can see in the first example above for user agent. Some web APIs
-require that you set a specific user agent. For example, the <a href="https://developer.github.com/v3/#user-agent-required">GitHub
+require that you set a specific user agent. For example, the <a href="https://docs.github.com/en/rest/using-the-rest-api/getting-started-with-the-rest-api?apiVersion=2022-11-28#user-agent">GitHub
 API</a> requires that you include a user agent string in the header of
 each request that is your username or the name of your application so
 they can contact you if there is a problem.</p>
