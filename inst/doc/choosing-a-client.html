@@ -12,7 +12,7 @@
 
 <meta name="author" content="Scott Chamberlain" />
 
-<meta name="date" content="2023-05-10" />
+<meta name="date" content="2024-07-18" />
 
 <title>6. Choosing a HTTP request class</title>
 
@@ -239,7 +239,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">6. Choosing a HTTP request class</h1>
 <h4 class="author">Scott Chamberlain</h4>
-<h4 class="date">2023-05-10</h4>
+<h4 class="date">2024-07-18</h4>
 
 
 
@@ -253,7 +253,7 @@ The following table compares features across the classes.</p>
 <col width="25%" />
 </colgroup>
 <thead>
-<tr class="header">
+<tr>
 <th>Class</th>
 <th>HTTP verbs</th>
 <th>Asynchronous?</th>
@@ -261,37 +261,37 @@ The following table compares features across the classes.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>HttpClient</td>
 <td>all</td>
 <td>no</td>
 <td><a href="https://bcgov.github.io/bcdata/">bcdata</a>,<a href="https://docs.ropensci.org/chirps/">chirps</a>,<a href="https://github.com/dirkschumacher/duckduckr">duckduckr</a>,<a href="https://dreamrs.github.io/gfonts/">gfonts</a>,<a href="https://pacha.dev/mindicador/">mindicador</a>,<a href="https://rmhogervorst.nl/nsapi/">nsapi</a>,<a href="https://docs.ropensci.org/tradestatistics/">tradestatistics</a>,<a href="https://github.com/stefanieschneider/viafr">viafr</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Paginator</td>
 <td>all except retry</td>
 <td>no</td>
 <td>—</td>
 </tr>
-<tr class="odd">
+<tr>
 <td>ok</td>
 <td>head,get</td>
 <td>no</td>
 <td><a href="https://jsta.github.io/dams/">dams</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Async</td>
 <td>all except retry</td>
 <td>yes</td>
 <td><a href="https://docs.ropensci.org/rdryad/">rdryad</a>,<a href="https://docs.ropensci.org/rnoaa/">rnoaa</a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>AsyncVaried</td>
 <td>all except retry</td>
 <td>yes</td>
 <td><a href="https://docs.ropensci.org/rcrossref/">rcrossref</a>,<a href="https://docs.ropensci.org/taxize/">taxize</a>,<a href="https://cran.r-project.org/package=mstrio">mstrio</a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>AsyncQueue</td>
 <td>all except retry</td>
 <td>yes</td>
