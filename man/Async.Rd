@@ -54,7 +54,7 @@ access values and methods on the object \code{x}.
 }
 
 \examples{
-\dontrun{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 cc <- Async$new(
   urls = c(
     'https://hb.opencpu.org/',
@@ -80,7 +80,7 @@ urls = c(
  'https://hb.opencpu.org/get?a=5',
  'https://hb.opencpu.org/get?foo=bar'
 )
-cc <- Async$new(urls = urls, 
+cc <- Async$new(urls = urls,
   opts = list(verbose = TRUE),
   headers = list(foo = "bar")
 )
@@ -102,7 +102,7 @@ lapply(res, function(z) z$parse("UTF-8"))
 
 # failure behavior
 ## e.g. when a URL doesn't exist, a timeout, etc.
-urls <- c("http://stuffthings.gvb", "https://foo.com", 
+urls <- c("http://stuffthings.gvb", "https://foo.com",
   "https://hb.opencpu.org/get")
 conn <- Async$new(urls = urls)
 res <- conn$get()
@@ -114,7 +114,21 @@ res[[3]]$parse("UTF-8") # a success
 urls = c("https://hb.opencpu.org/status/404", "https://hb.opencpu.org/status/429")
 conn <- Async$new(urls = urls)
 res <- conn$retry(verb="get")
+
+# mock
+cc <- Async$new(
+  urls = c(
+    'https://hb.opencpu.org/',
+    'https://hb.opencpu.org/get?a=5',
+    'https://hb.opencpu.org/get?foo=bar'
+  )
+)
+fun <- function(req) {
+  HttpResponse$new(method = "GET", url = "http://google.com",
+    status_code = 401L)
 }
+cc$get(mock = fun)
+\dontshow{\}) # examplesIf}
 
 ## ------------------------------------------------
 ## Method `Async$get`
@@ -236,7 +250,14 @@ A new \code{Async} object.
 \subsection{Method \code{get()}}{
 execute the \code{GET} http verb for the \code{urls}
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Async$get(path = NULL, query = list(), disk = NULL, stream = NULL, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Async$get(
+  path = NULL,
+  query = list(),
+  disk = NULL,
+  stream = NULL,
+  mock = getOption("crul_mock", NULL),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -252,6 +273,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \item{\code{stream}}{an R function to determine how to stream data. if
 \code{NULL} (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
@@ -288,6 +313,7 @@ execute the \code{POST} http verb for the \code{urls}
   encode = "multipart",
   disk = NULL,
   stream = NULL,
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -309,6 +335,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \item{\code{stream}}{an R function to determine how to stream data. if
 \code{NULL} (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
@@ -330,6 +360,7 @@ execute the \code{PUT} http verb for the \code{urls}
   encode = "multipart",
   disk = NULL,
   stream = NULL,
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -351,6 +382,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \item{\code{stream}}{an R function to determine how to stream data. if
 \code{NULL} (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
@@ -372,6 +407,7 @@ execute the \code{PATCH} http verb for the \code{urls}
   encode = "multipart",
   disk = NULL,
   stream = NULL,
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -393,6 +429,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \item{\code{stream}}{an R function to determine how to stream data. if
 \code{NULL} (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
@@ -414,6 +454,7 @@ execute the \code{DELETE} http verb for the \code{urls}
   encode = "multipart",
   disk = NULL,
   stream = NULL,
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -436,6 +477,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \code{NULL} (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
 
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
+
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,
 postfields, postfieldsize, and customrequest}
@@ -449,13 +494,17 @@ postfields, postfieldsize, and customrequest}
 \subsection{Method \code{head()}}{
 execute the \code{HEAD} http verb for the \code{urls}
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Async$head(path = NULL, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Async$head(path = NULL, mock = getOption("crul_mock", NULL), ...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{path}}{(character) URL path, appended to the base URL}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{curl options, only those in the acceptable set from
 \code{\link[curl:curl_options]{curl::curl_options()}} except the following: httpget, httppost, post,

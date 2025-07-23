@@ -52,7 +52,7 @@ access values and methods on the object \code{x}.
 }
 
 \examples{
-\dontrun{
+\dontshow{if (interactive()) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # pass in requests via ...
 req1 <- HttpRequest$new(
   url = "https://hb.opencpu.org/get",
@@ -173,7 +173,25 @@ tmp <- AsyncVaried$new(.list = reqlist)
 tmp
 tmp$request()
 tmp$responses()[[3]]
+
+# mock
+url <- "https://hb.opencpu.org/get"
+mock_fun <- function(status) {
+  function(req) {
+    HttpResponse$new(method = "GET", url = "http://google.com",
+      status_code = status)
+  }
 }
+reqlist <- list(
+  HttpRequest$new(url = url)$get(mock = mock_fun(status=418L)),
+  HttpRequest$new(url = url)$get(mock = mock_fun(status=201)),
+  HttpRequest$new(url = url)$get(mock = mock_fun(status=501L))
+)
+tmp <- AsyncVaried$new(.list = reqlist)
+tmp
+tmp$request()
+tmp$status()
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 Other async: 
@@ -182,6 +200,13 @@ Other async:
 \code{\link{HttpRequest}}
 }
 \concept{async}
+\section{Public fields}{
+\if{html}{\out{<div class="r6-fields">}}
+\describe{
+\item{\code{mock}}{a mocking function. could be \code{NULL} too}
+}
+\if{html}{\out{</div>}}
+}
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
@@ -223,7 +248,7 @@ print method for AsyncVaried objects
 \subsection{Method \code{new()}}{
 Create a new AsyncVaried object
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{AsyncVaried$new(..., .list = list())}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{AsyncVaried$new(..., .list = list(), mock = getOption("crul_mock", NULL))}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -231,6 +256,10 @@ Create a new AsyncVaried object
 \describe{
 \item{\code{..., .list}}{Any number of objects of class \code{\link[=HttpRequest]{HttpRequest()}},
 must supply inputs to one of these parameters, but not both}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 }
 \if{html}{\out{</div>}}
 }

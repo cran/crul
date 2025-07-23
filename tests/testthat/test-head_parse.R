@@ -14,12 +14,14 @@ test_that("head_parse: good", {
     # cat(paste0("  doing: ", names(headers$good)[i]), sep = "\n")
     z <- curl::parse_headers(headers$good[[i]], multiple = TRUE)
     zparsed <- lapply(z, head_parse)
-    expect_is(zparsed, "list")
+    expect_type(zparsed, "list")
     expect_length(zparsed, 1)
     expect_named(zparsed[[1]])
     expect_equal(zparsed[[1]]$status, "HTTP/2 200")
     w <- unname(unlist(zparsed[[1]]))
-    for (j in w) expect_false(grepl("^\\s|\\s$", j))
+    for (j in w) {
+      expect_false(grepl("^\\s|\\s$", j))
+    }
   }
 })
 
@@ -29,14 +31,15 @@ test_that("head_parse: bad", {
     # cat(paste0("  doing: ", names(headers$bad)[i]), sep = "\n")
     z <- curl::parse_headers(headers$bad[[i]], multiple = TRUE)
     zparsed <- lapply(z, function(w) suppressWarnings(head_parse(w)))
-    expect_is(zparsed, "list")
+    expect_type(zparsed, "list")
     expect_length(zparsed, 1)
     expect_named(zparsed[[1]])
     expect_equal(zparsed[[1]]$status, "HTTP/1.1 200 OK")
     w <- unname(unlist(zparsed[[1]]))
-    for (j in w) expect_false(grepl("^\\s|\\s$", j))
+    for (j in w) {
+      expect_false(grepl("^\\s|\\s$", j))
+    }
     # should throw warnings for each bad header
     lapply(z, function(w) expect_warning(head_parse(w)))
   }
 })
-

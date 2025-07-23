@@ -62,7 +62,7 @@ out$response_headers_all
 (x <- HttpClient$new(url = "https://hb.opencpu.org"))
 x$url
 x$handle # is empty, it gets created when a HTTP verb is called
-(r1 <- x$get('get'))
+(r1 <- x$get("get"))
 x$url
 x$handle
 r1$url
@@ -71,25 +71,25 @@ r1$content
 r1$response_headers
 r1$parse()
 
-(res_get2 <- x$get('get', query = list(hello = "world")))
+(res_get2 <- x$get("get", query = list(hello = "world")))
 res_get2$parse()
 library("jsonlite")
 jsonlite::fromJSON(res_get2$parse())
 
 # post request
-(res_post <- x$post('post', body = list(hello = "world")))
+(res_post <- x$post("post", body = list(hello = "world")))
 
 ## empty body request
-x$post('post')
+x$post("post")
 
 # put request
-(res_put <- x$put('put'))
+(res_put <- x$put("put"))
 
 # delete request
-(res_delete <- x$delete('delete'))
+(res_delete <- x$delete("delete"))
 
 # patch request
-(res_patch <- x$patch('patch'))
+(res_patch <- x$patch("patch"))
 
 # head request
 (res_head <- x$head())
@@ -97,7 +97,7 @@ x$post('post')
 # query params are URL encoded for you, so DO NOT do it yourself
 ## if you url encode yourself, it gets double encoded, and that's bad
 (x <- HttpClient$new(url = "https://hb.opencpu.org"))
-res <- x$get("get", query = list(a = 'hello world'))
+res <- x$get("get", query = list(a = "hello world"))
 
 # access intermediate headers in response_headers_all
 x <- HttpClient$new("https://doi.org/10.1007/978-3-642-40455-9_52-1")
@@ -262,7 +262,14 @@ A new \code{HttpClient} object
 \subsection{Method \code{get()}}{
 Make a GET request
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HttpClient$get(path = NULL, query = list(), disk = NULL, stream = NULL, ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HttpClient$get(
+  path = NULL,
+  query = list(),
+  disk = NULL,
+  stream = NULL,
+  mock = getOption("crul_mock", NULL),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -280,6 +287,10 @@ See \code{\link[curl:curl_fetch]{curl::curl_fetch_disk()}} for help.}
 \item{\code{stream}}{an R function to determine how to stream data. if
 NULL (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_stream()}}
 for help}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -303,6 +314,7 @@ Make a POST request
   disk = NULL,
   stream = NULL,
   encode = "multipart",
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -326,6 +338,10 @@ NULL (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_s
 for help}
 
 \item{\code{encode}}{one of form, multipart, json, or raw}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -349,6 +365,7 @@ Make a PUT request
   disk = NULL,
   stream = NULL,
   encode = "multipart",
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -372,6 +389,10 @@ NULL (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_s
 for help}
 
 \item{\code{encode}}{one of form, multipart, json, or raw}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -395,6 +416,7 @@ Make a PATCH request
   disk = NULL,
   stream = NULL,
   encode = "multipart",
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -418,6 +440,10 @@ NULL (default), memory used. See \code{\link[curl:curl_fetch]{curl::curl_fetch_s
 for help}
 
 \item{\code{encode}}{one of form, multipart, json, or raw}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
@@ -441,6 +467,7 @@ Make a DELETE request
   disk = NULL,
   stream = NULL,
   encode = "multipart",
+  mock = getOption("crul_mock", NULL),
   ...
 )}\if{html}{\out{</div>}}
 }
@@ -465,6 +492,10 @@ for help}
 
 \item{\code{encode}}{one of form, multipart, json, or raw}
 
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
+
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
 curl options, only those in the acceptable set from \code{\link[curl:curl_options]{curl::curl_options()}}
@@ -480,7 +511,12 @@ and customrequest}
 \subsection{Method \code{head()}}{
 Make a HEAD request
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{HttpClient$head(path = NULL, query = list(), ...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{HttpClient$head(
+  path = NULL,
+  query = list(),
+  mock = getOption("crul_mock", NULL),
+  ...
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -491,6 +527,10 @@ Make a HEAD request
 \item{\code{query}}{query terms, as a named list. any numeric values are
 passed through \code{\link[=format]{format()}} to prevent larger numbers from being
 scientifically formatted}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't want to
+handle the request) or a \link{HttpResponse} (if it does).}
 
 \item{\code{...}}{For \code{retry}, the options to be passed on to the method
 implementing the requested verb, including curl options. Otherwise,
